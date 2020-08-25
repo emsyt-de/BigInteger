@@ -49,9 +49,19 @@ concept ext_integral = std::is_integral_v<T1> || requires(T1 t1)
 //{ t1 / t1 } -> std::same_as<T1>;
 };
 
+inline std::ostream & operator<<(std::ostream & stream, const uint128_t & r)
+{
+	uint64_t l = static_cast<uint64_t>(r);
+	uint64_t u = r>>64;
+	if(u > 0)
+		return stream<<std::showbase<<u<<std::noshowbase<<std::setfill('0')<<std::setw(16)<<l<<std::showbase;
+	else
+		return stream<<std::showbase<<l;
+
+}
 
 /// base class
-template<typename B, std::size_t ...I>
+template<std::unsigned_integral B, std::size_t ...I>
 class BigInteger
 {
 
@@ -62,12 +72,13 @@ public:
 	constexpr BigInteger(const BigInteger & n) = delete;
 	constexpr BigInteger(BigInteger && n) = default;
 
-	template<std::integral ...T, std::enable_if_t<sizeof... (T) <= sizeof... (I),int> = 0>
+	template<std::unsigned_integral ...T, std::enable_if_t<sizeof... (T) <= sizeof... (I),int> = 0>
 	constexpr BigInteger(const T & ... n)
-		: numbers{static_cast<typename decltype(numbers)::value_type>(n)...}
+		: numbers{n...}
 	{
 	}
 
+public:
 	/// Assignment Operators
 	BigInteger & operator=(const BigInteger & n) = delete;
 	BigInteger & operator=(BigInteger && n) = default;
@@ -196,7 +207,7 @@ public:
 			BigInteger sum;
 			((std::get<I>(sum.numbers) = std::get<I>(l.numbers) + std::get<I>(r.numbers)), ...);
 			((std::get<I>(sum.numbers) += (I > 0 && sum.numbers[I-1] < l.numbers[I-1]) ? 1 : 0), ...);
-			return std::move(sum);
+			return sum;
 		}
 		else if constexpr (std::is_integral_v<T1>)
 		{
@@ -255,8 +266,99 @@ public:
 	friend inline constexpr BigInteger operator*(const T1 & l, const T2 & r){
 		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
 		{
-			BigInteger diff;
-			return std::move(diff);
+			BigInteger result;
+			std::array<B,sizeof... (I)*2> temp_l,temp_r;
+			std::array<std::array<B,sizeof... (I)*2>,sizeof... (I)*2> product;
+			constexpr auto num_bits = std::numeric_limits<B>::digits;
+			constexpr auto num_bits_half = num_bits >> 1;
+			constexpr B mask = std::numeric_limits<B>::max()>>num_bits_half;
+//			std::cout<< std::showbase;
+//			std::cout<<std::hex<<mask<<"\t"<<std::dec<<"num bits "<<num_bits_half<<"\n";
+			for(std::size_t i = 0; i < sizeof... (I); i++)
+			{
+				std::size_t ii = i<<1;
+				temp_l[ii]   = l.numbers[i] & mask;
+				temp_l[ii+1] = l.numbers[i]>>num_bits_half;
+				temp_r[ii]   = r.numbers[i] & mask;
+				temp_r[ii+1] = r.numbers[i]>>num_bits_half;
+			}
+			for(std::size_t i = 0; i < temp_l.size(); i++)
+			{
+				for(std::size_t j = 0; j < temp_r.size(); j++)
+				{
+					product[i][j] = temp_l[i]*temp_r[j];
+//					std::cout<<std::hex<<temp_l[i]<<"*"<<temp_r[j]<<"="<<product[i][j]<<"\t\t";
+				}
+//				std::cout<<"\n\n";
+			}
+//			std::cout<<"\n\n";
+			for(std::size_t jj = 0; jj < temp_l.size(); jj++)
+			{
+				for(std::size_t ii = 0; ii + jj < temp_r.size(); ii++)
+				{
+					auto j = jj>>1;
+					auto i = ii>>1;
+					auto temp0 = result.numbers[i+j];
+					decltype (temp0) temp1 = 0;
+					if((i+j) < result.numbers.size() - 1)
+					{
+						temp1 = result.numbers[i+j+1];
+					}
+
+					if(jj & 1 && ii & 1 && (i + j) < result.numbers.size() - 1)
+					{
+						result.numbers[i+j+1] += product[ii][jj];
+//						std::cout<<" 1: ["<<std::dec<<(i+j+1)<<"] "<<std::hex<<product[ii][jj]<<"\t";
+					}
+					else if((jj & 1 || ii & 1) && (i + j) < result.numbers.size() - 1)
+					{
+						result.numbers[i+j] += product[ii][jj] << num_bits_half;
+						result.numbers[i+j+1] += product[ii][jj] >> num_bits_half;
+//						std::cout<<" 2: ["<<std::dec<<(i+j+1)<<"] "<<std::hex<<(product[ii][jj] >> num_bits_half)<<" / ["<<std::dec<<(i+j)<<"] "<<std::hex<<(product[ii][jj] << num_bits_half)<<"\t";
+					}
+					else if((jj & 1 || ii & 1) && (i + j) < result.numbers.size() )
+					{
+						result.numbers[i+j] += (product[ii][jj] & mask) << num_bits_half;
+//						std::cout<<" 3: ["<<std::dec<<(i+j)<<"] "<<std::hex<<(product[ii][jj] << num_bits_half)<<"\t";
+					}
+					else
+					{
+						result.numbers[i+j] += product[ii][jj];
+//						std::cout<<" 4: ["<<std::dec<<(i+j)<<"] "<<std::hex<<product[ii][jj]<<"\t";
+					}
+
+//					std::cout<<"\n["<<i<<","<<j<<"] if "<<std::dec<<((i+j) < result.numbers.size() - 2)<<" "<<temp1 <<" "<< result.numbers[i+j+1]<<"\t"<<((i+j) < result.numbers.size() - 1)<<" "<<(temp0 > result.numbers[i+j])<<"\t";
+					if((i+j) < result.numbers.size() - 2 && temp1 > result.numbers[i+j+1])
+					{
+//						std::cout<<std::dec<<"["<<(i+j+2)<<"] 1: +1";
+						result.numbers[i+j+2] += 1;
+					}
+					if((i+j) < result.numbers.size() - 1 && temp0 > result.numbers[i+j])
+					{
+						temp1 = result.numbers[i+j+1];
+//						std::cout<<std::dec<<"["<<(i+j+1)<<"] 2: +1";
+						result.numbers[i+j+1] += 1;
+						if((i+j) < result.numbers.size() - 2 && temp1 > result.numbers[i+j+1])
+						{
+//							std::cout<<std::dec<<"["<<(i+j+2)<<"] 3: +1";
+							result.numbers[i+j+2] += 1;
+						}
+					}
+//					std::cout<<"\n";
+				}
+//				for(auto a: result.numbers)
+//				{
+//					std::cout<<a<<"\t";
+//				}
+//				std::cout<<"\n\n";
+			}
+//			std::cout<<"\n";
+//			for(auto a: result.numbers)
+//			{
+//				std::cout<<a<<"\t";
+//			}
+//			std::cout<<"\n\n\n";
+			return result;
 		}
 		else if constexpr (std::is_integral_v<T1>)
 		{
@@ -278,39 +380,10 @@ public:
 		return l = l * r;
 	}
 
-	template<char ...digits>
-	friend inline consteval BigInteger operator "" _num() noexcept
-	{
-		constexpr std::array<char, sizeof...(digits)> digits_array{ digits... };
-		// TODO fix max numbers
-		constexpr bool is_hex = sizeof... (digits) > 2 && sizeof... (digits) < 60 && digits_array[0] == '0' && digits_array[1] == 'x';
-		constexpr bool is_oct = sizeof... (digits) > 1 && sizeof... (digits) < 93 && digits_array[0] == '0' &&
-				(('0' <= digits <= '7') && ...);
-		constexpr bool is_dec = sizeof... (digits) > 0 && sizeof... (digits) < 70;
-		static_assert(is_hex || is_oct || is_dec, "invalid digit in number");
-		if constexpr(is_hex)
-		{
-			// remove hex 0x
-			// extract in batches with max 16^n hex number for 64-bit (2^64 == 16^16)
-			return stoi<digits_array.size()-2>(digits_array.data()+2,16);
-		}
-		else if constexpr(is_oct)
-		{
-			// remove oct 0
-			// extract in batches with max 8^n dec number for 64-bit (2^63 == 8^21)
-			return stoi<digits_array.size()-1>(digits_array.data()+1,8);
-		}
-		else if constexpr(is_dec)
-		{
-			// extract in batches with max 10^n dec number for 64-bit (10^19)
-			return stoi<digits_array.size()>(digits_array.data(),10);
-		}
-	}
-
 	/// IO Operators
 	friend std::ostream & operator<<(std::ostream & stream, const BigInteger & r)
 	{
-		return (stream<<"[ ",((stream << std::hex << static_cast<uint64_t>(r.numbers[I]) << (I < r.numbers.size()-1 ? ", ":" ")), ...),stream<<"]");
+		return (stream<<"[ ",((stream << std::hex << (r.numbers[I]) << (I < r.numbers.size()-1 ? ", ":" ")), ...),stream<<"]");
 	}
 
 	/// Get order of msb bit.
@@ -334,40 +407,108 @@ public:
 		return out;
 	}
 
-private:
-	template<std::size_t size>
-	static inline consteval void stoi_impl(const char* str, const BigInteger & base, BigInteger & value)
+	static constexpr std::size_t bit_size = sizeof(B) * sizeof... (I) * 8;
+	static consteval BigInteger max() noexcept
 	{
-		auto c = str[0];
-		auto i = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c - 'A' + 10;
-		if constexpr(size > 1)
+		BigInteger n;
+		((n.numbers[I] = std::numeric_limits<B>::max()), ...);
+		return n;
+	}
+private:
+	template<char ...digits>
+	static constexpr BigInteger to_number() noexcept
+	{
+		constexpr std::array<char, sizeof...(digits)> digits_array{ digits... };
+		constexpr bool is_hex = sizeof... (digits) > 2 && sizeof... (digits) <= ((bit_size>>2)+2) && digits_array[0] == '0' && digits_array[1] == 'x';
+		constexpr bool is_oct = sizeof... (digits) > 1 && sizeof... (digits) <= (bit_size/3+1) && digits_array[0] == '0' &&
+				(('0' <= digits && digits <= '7') && ...);
+		constexpr bool is_dec = sizeof... (digits) > 0 && sizeof... (digits) <= (static_cast<float>(bit_size)/3.32f) &&
+				(('0' <= digits && digits <= '9') && ...);
+		static_assert(is_hex || is_oct || is_dec, "invalid digit in number");
+		if constexpr(is_hex)
 		{
-			value = value * base + i;
-			stoi_impl<size-1>(str + 1, base, value);
+			// remove hex 0x
+			return stoi<2>(digits_array,16u);
+		}
+		else if constexpr(is_oct)
+		{
+			// remove oct 0
+			return stoi<1>(digits_array,8u);
+		}
+		else if constexpr(is_dec)
+		{
+			return stoi<0>(digits_array,10u);
 		}
 	}
 
-	template<std::size_t size>
-	static inline consteval BigInteger stoi(const char* str, const BigInteger & base)
+	template<std::size_t index, std::size_t size>
+	static constexpr BigInteger stoi_impl(std::array<char,size> str, BigInteger&& base, BigInteger&& value)
 	{
-		BigInteger result = 0;
-		stoi_impl<size>(str, base,result);
-		return result;
+		auto c = str[index];
+		uint8_t i = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c - 'A' + 10;
+		if constexpr(index < size - 1)
+		{
+			return stoi_impl<index+1>(str, std::forward<BigInteger>(base), value * base + i);
+		}
+		else
+		{
+			return value * base + i;
+		}
+	}
+
+	template<std::size_t index, std::size_t size>
+	static constexpr BigInteger stoi(std::array<char,size> str, BigInteger && base)
+	{
+		return stoi_impl<index>(str, std::forward<BigInteger>(base), 0u);
 	}
 
 	/// {} makes value initialization for non class non array types like int to its default value 0
 	std::array<B,sizeof... (I)> numbers{};
 };
 
-typedef BigInteger<uint64_t,0,1,2,3,4,5,6,7> uint512_t;
-typedef BigInteger<uint64_t,0,1,2,3> uint256_t;
+namespace uint128_ct {
+typedef BigInteger<uint32_t,0,1,2,3> uint128_ct;
 
-/// literal operators
+/// literal operator
 template<char ...digits>
-inline consteval uint512_t operator "" _num() noexcept;
-//template<char ...digits>
-//inline consteval uint255_t operator "" _num() noexcept;
+consteval uint128_ct operator "" _num() noexcept
+{
+	return uint128_ct::to_number<digits...>();
+}
+}
 
+namespace uint256_t {
+typedef BigInteger<uint128_t,0,1> uint256_t;
+
+/// literal operator
+template<char ...digits>
+consteval uint256_t operator "" _num() noexcept
+{
+	return uint256_t::to_number<digits...>();
+}
+}
+
+namespace uint512_t {
+typedef BigInteger<uint128_t,0,1,2,3> uint512_t;
+
+/// literal operator
+template<char ...digits>
+consteval uint512_t operator "" _num() noexcept
+{
+	return uint512_t::to_number<digits...>();
+}
+}
+
+namespace uint1024_t {
+typedef BigInteger<uint128_t,0,1,2,3,4,5,6,7> uint1024_t;
+
+/// literal operator
+template<char ...digits>
+consteval uint1024_t operator "" _num() noexcept
+{
+	return uint1024_t::to_number<digits...>();
+}
+}
 
 }
 
