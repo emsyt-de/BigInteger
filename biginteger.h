@@ -272,8 +272,6 @@ public:
 			constexpr auto num_bits = std::numeric_limits<B>::digits;
 			constexpr auto num_bits_half = num_bits >> 1;
 			constexpr B mask = std::numeric_limits<B>::max()>>num_bits_half;
-//			std::cout<< std::showbase;
-//			std::cout<<std::hex<<mask<<"\t"<<std::dec<<"num bits "<<num_bits_half<<"\n";
 			for(std::size_t i = 0; i < sizeof... (I); i++)
 			{
 				std::size_t ii = i<<1;
@@ -287,11 +285,8 @@ public:
 				for(std::size_t j = 0; j < temp_r.size(); j++)
 				{
 					product[i][j] = temp_l[i]*temp_r[j];
-//					std::cout<<std::hex<<temp_l[i]<<"*"<<temp_r[j]<<"="<<product[i][j]<<"\t\t";
 				}
-//				std::cout<<"\n\n";
 			}
-//			std::cout<<"\n\n";
 			for(std::size_t jj = 0; jj < temp_l.size(); jj++)
 			{
 				for(std::size_t ii = 0; ii + jj < temp_r.size(); ii++)
@@ -308,56 +303,36 @@ public:
 					if(jj & 1 && ii & 1 && (i + j) < result.numbers.size() - 1)
 					{
 						result.numbers[i+j+1] += product[ii][jj];
-//						std::cout<<" 1: ["<<std::dec<<(i+j+1)<<"] "<<std::hex<<product[ii][jj]<<"\t";
 					}
 					else if((jj & 1 || ii & 1) && (i + j) < result.numbers.size() - 1)
 					{
 						result.numbers[i+j] += product[ii][jj] << num_bits_half;
 						result.numbers[i+j+1] += product[ii][jj] >> num_bits_half;
-//						std::cout<<" 2: ["<<std::dec<<(i+j+1)<<"] "<<std::hex<<(product[ii][jj] >> num_bits_half)<<" / ["<<std::dec<<(i+j)<<"] "<<std::hex<<(product[ii][jj] << num_bits_half)<<"\t";
 					}
 					else if((jj & 1 || ii & 1) && (i + j) < result.numbers.size() )
 					{
 						result.numbers[i+j] += (product[ii][jj] & mask) << num_bits_half;
-//						std::cout<<" 3: ["<<std::dec<<(i+j)<<"] "<<std::hex<<(product[ii][jj] << num_bits_half)<<"\t";
 					}
 					else
 					{
 						result.numbers[i+j] += product[ii][jj];
-//						std::cout<<" 4: ["<<std::dec<<(i+j)<<"] "<<std::hex<<product[ii][jj]<<"\t";
 					}
 
-//					std::cout<<"\n["<<i<<","<<j<<"] if "<<std::dec<<((i+j) < result.numbers.size() - 2)<<" "<<temp1 <<" "<< result.numbers[i+j+1]<<"\t"<<((i+j) < result.numbers.size() - 1)<<" "<<(temp0 > result.numbers[i+j])<<"\t";
 					if((i+j) < result.numbers.size() - 2 && temp1 > result.numbers[i+j+1])
 					{
-//						std::cout<<std::dec<<"["<<(i+j+2)<<"] 1: +1";
 						result.numbers[i+j+2] += 1;
 					}
 					if((i+j) < result.numbers.size() - 1 && temp0 > result.numbers[i+j])
 					{
 						temp1 = result.numbers[i+j+1];
-//						std::cout<<std::dec<<"["<<(i+j+1)<<"] 2: +1";
 						result.numbers[i+j+1] += 1;
 						if((i+j) < result.numbers.size() - 2 && temp1 > result.numbers[i+j+1])
 						{
-//							std::cout<<std::dec<<"["<<(i+j+2)<<"] 3: +1";
 							result.numbers[i+j+2] += 1;
 						}
 					}
-//					std::cout<<"\n";
 				}
-//				for(auto a: result.numbers)
-//				{
-//					std::cout<<a<<"\t";
-//				}
-//				std::cout<<"\n\n";
 			}
-//			std::cout<<"\n";
-//			for(auto a: result.numbers)
-//			{
-//				std::cout<<a<<"\t";
-//			}
-//			std::cout<<"\n\n\n";
 			return result;
 		}
 		else if constexpr (std::is_integral_v<T1>)
