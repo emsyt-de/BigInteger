@@ -26,8 +26,7 @@
 #include <utility>
 #include <array>
 #include <functional>
-#include <iostream>
-
+#include <iomanip>
 
 typedef __uint128_t uint128_t;
 typedef __int128_t int128_t;
@@ -50,6 +49,7 @@ concept ext_integral = std::is_integral_v<T1> || requires(T1 t1)
 //{ t1 - t1 } -> std::same_as<T1>;
 //{ t1 * t1 } -> std::same_as<T1>;
 //{ t1 / t1 } -> std::same_as<T1>;
+//{ t1 % t1 } -> std::same_as<T1>;
 };
 
 inline std::ostream & operator<<(std::ostream & stream, const uint128_t & r)
@@ -80,7 +80,6 @@ public:
 		: numbers{n...}
 	{}
 
-public:
 	/// Assignment Operators
 	BigInteger & operator=(const BigInteger & n) = delete;
 	constexpr BigInteger & operator=(BigInteger && n) = default;
@@ -385,6 +384,33 @@ public:
 		return l = l / r;
 	}
 
+	/// Modulo
+	template <ext_integral T1, ext_integral T2>
+	friend inline constexpr BigInteger operator%(const T1 & l, const T2 & r){
+		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
+		{
+			return divmod(l,r).second;
+		}
+		else if constexpr (std::is_integral_v<T1>)
+		{
+			return static_cast<BigInteger>(l) % r;
+		}
+		else if constexpr (std::is_integral_v<T2>)
+		{
+			return l % static_cast<BigInteger>(r);
+		}
+		else
+		{
+			static_assert (!(std::is_integral_v<T1> || std::is_integral_v<T2>), "Wrong modulo operator overload");
+			return r % l;
+		}
+	}
+
+	template <ext_integral T2 >
+	friend inline constexpr BigInteger & operator%=(BigInteger & l, const T2 & r){
+		return l = l % r;
+	}
+
 	/// Bit Shift Operators
 
 	/// Shift left
@@ -534,22 +560,8 @@ public:
 		return exp_by_squaring(1u, std::forward<BigInteger>(x), n);
 	}
 
-private:
-	template<std::unsigned_integral T>
-	static constexpr BigInteger exp_by_squaring(BigInteger&& y, BigInteger&& x, T n)
-	{
-		if(n == 0)
-			return std::forward<BigInteger>(y);
-		else if(n == 1)
-			return x * y;
-		else if(n & 1) // odd
-			return exp_by_squaring( x * y, x * x, (n - 1)>>1);
-		else // even
-			return exp_by_squaring( std::forward<BigInteger>(y), x * x, n>>1);
-	}
-
 	template<char ...digits>
-	static constexpr BigInteger to_number() noexcept
+	static consteval BigInteger to_number() noexcept
 	{
 		constexpr std::array<char, sizeof...(digits)> digits_array{ digits... };
 		constexpr bool is_hex = sizeof... (digits) > 2 && sizeof... (digits) <= ((bit_size>>2)+2) && digits_array[0] == '0' && digits_array[1] == 'x';
@@ -572,6 +584,20 @@ private:
 		{
 			return stoi<0>(std::forward<decltype (digits_array)>(digits_array),10u);
 		}
+	}
+
+private:
+	template<std::unsigned_integral T>
+	static constexpr BigInteger exp_by_squaring(BigInteger&& y, BigInteger&& x, T n)
+	{
+		if(n == 0)
+			return std::forward<BigInteger>(y);
+		else if(n == 1)
+			return x * y;
+		else if(n & 1) // odd
+			return exp_by_squaring( x * y, x * x, (n - 1)>>1);
+		else // even
+			return exp_by_squaring( std::forward<BigInteger>(y), x * x, n>>1);
 	}
 
 	template<std::size_t index, std::size_t size>
