@@ -17,6 +17,8 @@
 
 #include "testbiginteger.h"
 
+static constexpr bool proof_const = false;
+
 TYPED_TEST(BigIntegerTests, Multiply)
 {
 	TypeParam  a0,a1,a2;
@@ -34,10 +36,13 @@ TYPED_TEST(BigIntegerTests, Multiply)
 		c1 = 0xfffffffe00000001_num;
 		c2 = 0xfe91f3256b157e40e77a68c04bb069e6_num;
 
+		if constexpr(proof_const)
+		{
 		/// Test compile time computing
 		constexpr TypeParam ab3 = 0xff45d391f11421ae_num * 0xff4b9c63cbd74d45_num;
 		constexpr TypeParam c3  = 0xfe91f3256b157e40e77a68c04bb069e6_num;
 		static_assert (ab3 == c3, "Multiply failed");
+		}
 	}
 	else if constexpr(TypeParam::bit_size == 256)
 	{
@@ -51,10 +56,13 @@ TYPED_TEST(BigIntegerTests, Multiply)
 		c1 = 0xfffffffe00000001_num;
 		c2 = 0xffffffffe000000001_num;
 
+		if constexpr(proof_const)
+		{
 		/// Test compile time computing
 		constexpr TypeParam ab3 = 0xfffffffff_num*0xfffffffff_num;
 		constexpr TypeParam c3  = 0xffffffffe000000001_num;
 		static_assert (ab3 == c3, "Multiply failed");
+		}
 	}
 	else if constexpr(TypeParam::bit_size == 512)
 	{
@@ -68,11 +76,14 @@ TYPED_TEST(BigIntegerTests, Multiply)
 		c1 = 0x346789ab8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edef21783321ef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8b9876544_num;
 		c2 = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num;
 
+		if constexpr(proof_const)
+		{
 		/// Test compile time computing
 		constexpr TypeParam ab3 = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num
 				* 0x893ace7477dca3262672246789abc346789abc346789abc346789abc_num;
 		constexpr TypeParam c3  = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num;
 		static_assert (ab3 == c3, "Multiply failed");
+		}
 	}
 	else if constexpr(TypeParam::bit_size == 1024)
 	{
@@ -86,11 +97,14 @@ TYPED_TEST(BigIntegerTests, Multiply)
 		c1 = 0x346789ab8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edef21783321ef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8b9876544_num;
 		c2 = 0x18b035581830722386091c50d922d0779b4364b931ba579aa3cd50aadc768500498d1bc95f9ffb2d91685cdf47c1c7a705cd635cacae5ea65b7789ed126b8a8413c5d7025e4fd791011bbf02e68936c9c131c835c338b254a00dcd5a42df364a3cffba6ebfd2066d6b13e5ad895850cc41f01633dab4aa76_num;
 
+		if constexpr(proof_const)
+		{
 		/// Test compile time computing
 		constexpr TypeParam ab3 = 0x346789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num
 				* 0x789abc346789ab8e0e81dbb63e5be577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020346789ab8edeeeef289abc346789abc346789abc346789_num;
 		constexpr TypeParam c3  = 0x18b035581830722386091c50d922d0779b4364b931ba579aa3cd50aadc768500498d1bc95f9ffb2d91685cdf47c1c7a705cd635cacae5ea65b7789ed126b8a8413c5d7025e4fd791011bbf02e68936c9c131c835c338b254a00dcd5a42df364a3cffba6ebfd2066d6b13e5ad895850cc41f01633dab4aa76_num;
 		static_assert (ab3 == c3, "Multiply failed");
+		}
 	}
 	else
 	{
@@ -103,5 +117,5 @@ TYPED_TEST(BigIntegerTests, Multiply)
 	EXPECT_EQ(a1*b1, c1);
 	EXPECT_EQ(b1*a1, c1);
 	EXPECT_EQ(b2*a2, c2);
+	EXPECT_EQ(a2*b2, c2);
 }
-

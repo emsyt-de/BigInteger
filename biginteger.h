@@ -19,12 +19,15 @@
 #define BIGINTEGER_H
 
 #include <cstdint>
+#include <cstring>
 #include <sstream>
 #include <stdexcept>
 #include <concepts>
 #include <utility>
 #include <array>
+#include <functional>
 #include <iostream>
+
 
 typedef __uint128_t uint128_t;
 typedef __int128_t int128_t;
@@ -75,13 +78,12 @@ public:
 	template<std::unsigned_integral ...T, std::enable_if_t<sizeof... (T) <= sizeof... (I),int> = 0>
 	constexpr BigInteger(const T & ... n)
 		: numbers{n...}
-	{
-	}
+	{}
 
 public:
 	/// Assignment Operators
 	BigInteger & operator=(const BigInteger & n) = delete;
-	BigInteger & operator=(BigInteger && n) = default;
+	constexpr BigInteger & operator=(BigInteger && n) = default;
 
 	/// Typecast Operators
 //	constexpr operator bool() const
@@ -97,7 +99,7 @@ public:
 	{
 		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
 		{
-			return ((l.numbers[I] & r.numbers[I]) ,...);
+			return BigInteger((l.numbers[I] & r.numbers[I]) ...);
 		}
 		else if constexpr (std::is_integral_v<T2>)
 		{
@@ -114,7 +116,7 @@ public:
 	}
 
 	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator&=(T1 & l, const T2 & r)
+	friend inline constexpr BigInteger& operator&=(T1 & l, const T2 & r)
 	{
 		return l = (l & r);
 	}
@@ -125,7 +127,7 @@ public:
 	{
 		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
 		{
-			return ((l.numbers[I] | r.numbers[I]), ...);
+			return BigInteger((l.numbers[I] | r.numbers[I]) ...);
 		}
 		else if constexpr (std::is_integral_v<T2>)
 		{
@@ -142,7 +144,7 @@ public:
 	}
 
 	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator|=(T1 & l, const T2 & r)
+	friend inline constexpr BigInteger& operator|=(T1 & l, const T2 & r)
 	{
 		return l = (l | r);
 	}
@@ -153,7 +155,7 @@ public:
 	{
 		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
 		{
-			return ((l.numbers[I] ^ r.numbers[I]), ...);
+			return BigInteger((l.numbers[I] ^ r.numbers[I]) ...);
 		}
 		else if constexpr (std::is_integral_v<T2>)
 		{
@@ -170,14 +172,15 @@ public:
 	}
 
 	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator^=(T1 & l, const T2 & r)
+	friend inline constexpr BigInteger& operator^=(T1 & l, const T2 & r)
 	{
 		return l = (l ^ r);
 	}
 
 	/// Invert operator
-	inline BigInteger operator~() const {
-		return (~numbers[I] , ...);
+	inline BigInteger operator~() const
+	{
+		return {std::forward<B>(~numbers[I])...};
 	}
 
 	/// Comparison Operators
@@ -355,6 +358,121 @@ public:
 		return l = l * r;
 	}
 
+	/// Divide
+	template <ext_integral T1, ext_integral T2>
+	friend inline constexpr BigInteger operator/(const T1 & l, const T2 & r){
+		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
+		{
+			return divmod(l,r).first;
+		}
+		else if constexpr (std::is_integral_v<T1>)
+		{
+			return static_cast<BigInteger>(l) / r;
+		}
+		else if constexpr (std::is_integral_v<T2>)
+		{
+			return l / static_cast<BigInteger>(r);
+		}
+		else
+		{
+			static_assert (!(std::is_integral_v<T1> || std::is_integral_v<T2>), "Wrong divide operator overload");
+			return r / l;
+		}
+	}
+
+	template <ext_integral T2 >
+	friend inline constexpr BigInteger & operator/=(BigInteger & l, const T2 & r){
+		return l = l / r;
+	}
+
+	/// Bit Shift Operators
+
+	/// Shift left
+	template <ext_integral T1, std::unsigned_integral T2>
+	friend inline constexpr BigInteger operator<<(const T1 & l, const T2 & r)
+	{
+		if constexpr (std::is_same_v<T1,BigInteger>)
+		{
+			BigInteger result;
+			std::size_t msb = (sizeof(sizeof (B))<<3) - __builtin_clzl(sizeof (B)) - 1;
+			std::size_t chunk_shift = r>>(3+msb);
+			std::size_t left = r - ((chunk_shift*sizeof (B))<<3);
+			for(std::size_t i = chunk_shift; i < result.numbers.size(); i++)
+			{
+				result.numbers[i] = l.numbers[i-chunk_shift];
+			}
+			if(left) // 0...sizeof(B)*8 bit shift is left
+			{
+				result.numbers[chunk_shift] <<= left;
+				std::size_t right_shift = (sizeof (B)<<3)-left;
+				for(std::size_t i = chunk_shift + 1; i < l.numbers.size(); i++)
+				{
+					result.numbers[i] <<= left;
+					result.numbers[i] |= l.numbers[i-chunk_shift-1] >> right_shift;
+				}
+			}
+			return result;
+		}
+		else if constexpr (std::is_integral_v<T1>)
+		{
+			return static_cast<BigInteger>(l) << r;
+		}
+		else
+		{
+			static_assert (!(std::is_integral_v<T1>), "Wrong shift left operator overload");
+			return r << l;
+		}
+	}
+
+	template <std::unsigned_integral T2>
+	friend inline constexpr BigInteger& operator<<=(BigInteger & l, const T2 & r)
+	{
+		return l = l << r;
+	}
+
+	/// Shift right
+	template <ext_integral T1, std::unsigned_integral T2>
+	friend inline constexpr BigInteger operator>>(const T1 & l, const T2 & r)
+	{
+		if constexpr (std::is_same_v<T1,BigInteger>)
+		{
+			BigInteger result;
+			std::size_t msb = (sizeof(sizeof (B))<<3) - __builtin_clzl(sizeof (B)) - 1;
+			std::size_t chunk_shift = r>>(3+msb);
+			std::size_t left = r - ((chunk_shift*sizeof (B))<<3);
+			for(std::size_t i = chunk_shift; i < result.numbers.size(); i++)
+			{
+				result.numbers[i-chunk_shift] = l.numbers[i];
+			}
+			if(left) // 0...sizeof(B)*8 bit shift is left
+			{
+				result.numbers[l.numbers.size() - chunk_shift - 1] >>= left;
+				std::size_t left_shift = (sizeof (B)<<3)-left;
+				for(std::size_t i = 0; i < l.numbers.size() - chunk_shift - 1; i++)
+				{
+					result.numbers[i] >>= left;
+					result.numbers[i] |= l.numbers[i + chunk_shift + 1] << left_shift;
+				}
+			}
+			return result;
+		}
+		else if constexpr (std::is_integral_v<T1>)
+		{
+			return static_cast<BigInteger>(l) << r;
+		}
+		else
+		{
+			static_assert (!(std::is_integral_v<T1>), "Wrong shift left operator overload");
+			return r << l;
+		}
+	}
+
+	template <std::unsigned_integral T2>
+	friend inline constexpr BigInteger& operator>>=(BigInteger & l, const T2 & r)
+	{
+		return l = l >> r;
+	}
+
 	/// IO Operators
 	friend std::ostream & operator<<(std::ostream & stream, const BigInteger & r)
 	{
@@ -363,23 +481,43 @@ public:
 
 	/// Get order of msb bit.
 	/// Return [0 ... ((sizeof(block) * #block * 8) - 1)].
-	consteval auto bits() const{
+	static constexpr auto bits(const BigInteger& n) {
 		constexpr auto bits_per_block = sizeof (B) * 8;
-		int16_t out = bits_per_block * numbers.size() - 1;
-		static_assert (sizeof (B) > sizeof (uint64_t), "Unsupported block size");
-		auto it = numbers.rbegin();
-		while (it != numbers.rend())
+		std::size_t out = bits_per_block * n.numbers.size();
+		auto it = n.numbers.rbegin();
+		while (it != n.numbers.rend())
 		{
-			if(*it > 0) {
-				out -= static_cast<int16_t>(__builtin_clzll(*it));
+			if(*it > 0)
+			{
+				if constexpr(sizeof (B) == 2 * sizeof (uint64_t))
+				{
+					if(B n = *it >> (sizeof (uint64_t)<<3); n > 0)
+					{
+						out -= static_cast<std::size_t>(__builtin_clzll(n));
+					}
+					else
+					{
+						out -= 64;
+						out -= static_cast<std::size_t>(__builtin_clzll(*it));
+					}
+				}
+				else if constexpr(sizeof (B) <= sizeof (uint64_t))
+				{
+					out -= static_cast<std::size_t>(__builtin_clzll(*it));
+				}
+				else
+				{
+					static_assert(sizeof (B) == 0, "Unsupported type");
+				}
 				break;
 			}
 			else
+			{
 				out -= bits_per_block;
+			}
+			it++;
 		}
-		if(out < 0)
-			out = 0;
-		return out;
+		return out > 0 ? out - 1 : 0;
 	}
 
 	static constexpr std::size_t bit_size = sizeof(B) * sizeof... (I) * 8;
@@ -389,7 +527,27 @@ public:
 		((n.numbers[I] = std::numeric_limits<B>::max()), ...);
 		return n;
 	}
+
+	template<std::unsigned_integral T>
+	static constexpr BigInteger exp(BigInteger&& x, T n)
+	{
+		return exp_by_squaring(1u, std::forward<BigInteger>(x), n);
+	}
+
 private:
+	template<std::unsigned_integral T>
+	static constexpr BigInteger exp_by_squaring(BigInteger&& y, BigInteger&& x, T n)
+	{
+		if(n == 0)
+			return std::forward<BigInteger>(y);
+		else if(n == 1)
+			return x * y;
+		else if(n & 1) // odd
+			return exp_by_squaring( x * y, x * x, (n - 1)>>1);
+		else // even
+			return exp_by_squaring( std::forward<BigInteger>(y), x * x, n>>1);
+	}
+
 	template<char ...digits>
 	static constexpr BigInteger to_number() noexcept
 	{
@@ -403,27 +561,27 @@ private:
 		if constexpr(is_hex)
 		{
 			// remove hex 0x
-			return stoi<2>(digits_array,16u);
+			return stoi<2>(std::forward<decltype (digits_array)>(digits_array),16u);
 		}
 		else if constexpr(is_oct)
 		{
 			// remove oct 0
-			return stoi<1>(digits_array,8u);
+			return stoi<1>(std::forward<decltype (digits_array)>(digits_array),8u);
 		}
 		else if constexpr(is_dec)
 		{
-			return stoi<0>(digits_array,10u);
+			return stoi<0>(std::forward<decltype (digits_array)>(digits_array),10u);
 		}
 	}
 
 	template<std::size_t index, std::size_t size>
-	static constexpr BigInteger stoi_impl(std::array<char,size> str, BigInteger&& base, BigInteger&& value)
+	static constexpr BigInteger stoi_impl(const std::array<char,size>&& str, BigInteger&& base, BigInteger&& value)
 	{
 		auto c = str[index];
-		uint8_t i = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c - 'A' + 10;
+		B i = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c - 'A' + 10;
 		if constexpr(index < size - 1)
 		{
-			return stoi_impl<index+1>(str, std::forward<BigInteger>(base), value * base + i);
+			return stoi_impl<index+1>(std::forward<decltype (str)>(str), std::forward<BigInteger>(base), value * base + i);
 		}
 		else
 		{
@@ -432,17 +590,49 @@ private:
 	}
 
 	template<std::size_t index, std::size_t size>
-	static constexpr BigInteger stoi(std::array<char,size> str, BigInteger && base)
+	static constexpr BigInteger stoi(const std::array<char,size>&& str, BigInteger && base)
 	{
-		return stoi_impl<index>(str, std::forward<BigInteger>(base), 0u);
+		return stoi_impl<index>(std::forward<decltype (str)>(str), std::forward<BigInteger>(base), 0u);
+	}
+
+	static constexpr std::pair<BigInteger,BigInteger> divmod(const BigInteger & l, const BigInteger & r)
+	{
+		auto msb_l = bits(l);
+		auto msb_r = bits(r);
+		BigInteger one(1u);
+		BigInteger zero(0u);
+		if(r == zero)
+		{
+			throw std::invalid_argument("Devide with zero!");
+		}
+		else if(l < r)
+		{
+			return std::make_pair(BigInteger(0u),l<<0u);  // use noop to copy l to result
+		}
+		BigInteger ll = l << 0u; // use noop to copy const value l to ll
+		BigInteger rr = r << (msb_l-msb_r);
+		BigInteger i = one << (msb_l-msb_r);
+		BigInteger div,mod;
+		while(i > zero)
+		{
+			if(ll >= rr)
+			{
+				div |= i;
+				ll -= rr;
+			}
+			rr >>= 1u;
+			i >>= 1u;
+		}
+		return std::make_pair(std::forward<BigInteger>(div),std::forward<BigInteger>(mod));
 	}
 
 	/// {} makes value initialization for non class non array types like int to its default value 0
 	std::array<B,sizeof... (I)> numbers{};
 };
 
+
 namespace uint128_ct {
-typedef BigInteger<uint32_t,0,1,2,3> uint128_ct;
+typedef BigInteger<uint64_t,0,1> uint128_ct;
 
 /// literal operator
 template<char ...digits>

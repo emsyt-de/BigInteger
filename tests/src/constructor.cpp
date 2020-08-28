@@ -4,11 +4,11 @@
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
+ * the free Software foundation, version 3.
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * MERCHANTABILITY or fITNESS fOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -28,7 +28,7 @@ TYPED_TEST(BigIntegerTests, LiteralConstructor)
 	if constexpr(TypeParam::bit_size == 128)
 	{
 		using namespace uint128_ct;
-		constexpr TypeParam a = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_num;
+		constexpr TypeParam a = 0xffffffffffffffffffffffffffffffff_num;
 		constexpr TypeParam b = 0777777777777777777777777777777777777777777_num;
 		constexpr TypeParam c = 85070591730234615865843651857942052863_num;
 		ASSERT_EQ(a,TypeParam::max());
@@ -37,7 +37,7 @@ TYPED_TEST(BigIntegerTests, LiteralConstructor)
 	else if constexpr(TypeParam::bit_size == 256)
 	{
 		using namespace uint256_t;
-		constexpr TypeParam a = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_num;
+		constexpr TypeParam a = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff_num;
 		constexpr TypeParam b = 07777777777777777777777777777777777777777777777777777777777777777777777777777777777777_num;
 		constexpr TypeParam c = 57896044618658097711785492504343953926634992332820282019728792003956564819967_num;
 		ASSERT_EQ(a,TypeParam::max());
@@ -46,7 +46,7 @@ TYPED_TEST(BigIntegerTests, LiteralConstructor)
 	else if constexpr(TypeParam::bit_size == 512)
 	{
 		using namespace uint512_t;
-		constexpr TypeParam a = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_num;
+		constexpr TypeParam a = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff_num;
 		constexpr TypeParam b = 077777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777_num;
 		constexpr TypeParam c = 3351951982485649274893506249551461531869841455148098344430890360930441007518386744200468574541725856922507964546621512713438470702986642486608412251521023_num;
 		ASSERT_EQ(a,TypeParam::max());
@@ -55,7 +55,7 @@ TYPED_TEST(BigIntegerTests, LiteralConstructor)
 	else if constexpr(TypeParam::bit_size == 1024)
 	{
 		using namespace uint1024_t;
-		constexpr TypeParam a = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_num;
+		constexpr TypeParam a = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff_num;
 		constexpr TypeParam b = 077777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777_num;
 		constexpr TypeParam c = 89884656743115795386465259539451236680898848947115328636715040578866337902750481566354238661203768010560056939935696678829394884407208311246423715319737062188883946712432742638151109800623047059726541476042502884419075341171231440736956555270413618581675255342293149119973622969239858152417678164812112068607_num;
 		ASSERT_EQ(a,TypeParam::max());
