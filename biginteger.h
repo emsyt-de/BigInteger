@@ -39,19 +39,6 @@ struct is_instance : public std::false_type {};
 template <typename B, size_t... T, template <typename,std::size_t ...> class U>
 struct is_instance<U<B,T...>, U> : public std::true_type {};
 
-/// define extended integral concept
-template <typename T1>
-concept ext_integral = std::is_integral_v<T1> || requires(T1 t1)
-{
-{ t1 };
-{ T1::numbers };
-//{ t1 + t1 } -> std::same_as<T1>;
-//{ t1 - t1 } -> std::same_as<T1>;
-//{ t1 * t1 } -> std::same_as<T1>;
-//{ t1 / t1 } -> std::same_as<T1>;
-//{ t1 % t1 } -> std::same_as<T1>;
-};
-
 inline std::ostream & operator<<(std::ostream & stream, const uint128_t & r)
 {
 	uint64_t l = static_cast<uint64_t>(r);
@@ -63,7 +50,6 @@ inline std::ostream & operator<<(std::ostream & stream, const uint128_t & r)
 
 }
 
-/// base class
 template<std::unsigned_integral B, std::size_t ...I>
 class BigInteger
 {
@@ -95,85 +81,34 @@ public:
 	/// Bitwise Operators
 
 	/// And
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator&(const T1 & l, const T2 & r)
+	friend inline constexpr BigInteger operator&(const BigInteger & l, const BigInteger & r)
 	{
-		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
-		{
-			return BigInteger((l.numbers[I] & r.numbers[I]) ...);
-		}
-		else if constexpr (std::is_integral_v<T2>)
-		{
-			return l & BigInteger(r);
-		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return BigInteger(l) & r;
-		}
-		else
-		{
-			return r & l;
-		}
+		return {std::forward<B>(l.numbers[I] & r.numbers[I]) ...};
 	}
 
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger& operator&=(T1 & l, const T2 & r)
+	friend inline constexpr BigInteger& operator&=(BigInteger & l, const BigInteger & r)
 	{
 		return l = (l & r);
 	}
 
 	/// Or
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator|(const T1 & l, const T2 & r)
+	friend inline constexpr BigInteger operator|(const BigInteger & l, const BigInteger & r)
 	{
-		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
-		{
-			return BigInteger((l.numbers[I] | r.numbers[I]) ...);
-		}
-		else if constexpr (std::is_integral_v<T2>)
-		{
-			return l | BigInteger(r);
-		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return BigInteger(l) | r;
-		}
-		else
-		{
-			return r | l;
-		}
+		return {std::forward<B>(l.numbers[I] | r.numbers[I]) ...};
 	}
 
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger& operator|=(T1 & l, const T2 & r)
+	friend inline constexpr BigInteger& operator|=(BigInteger & l, const BigInteger & r)
 	{
 		return l = (l | r);
 	}
 
 	/// Xor
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator^(const T1 & l, const T2 & r)
+	friend inline constexpr BigInteger operator^(const BigInteger & l, const BigInteger & r)
 	{
-		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
-		{
-			return BigInteger((l.numbers[I] ^ r.numbers[I]) ...);
-		}
-		else if constexpr (std::is_integral_v<T2>)
-		{
-			return l ^ BigInteger(r);
-		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return BigInteger(l) ^ r;
-		}
-		else
-		{
-			return r ^ l;
-		}
+		return {std::forward<B>(l.numbers[I] ^ r.numbers[I]) ...};
 	}
 
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger& operator^=(T1 & l, const T2 & r)
+	friend inline constexpr BigInteger& operator^=(BigInteger & l, const BigInteger & r)
 	{
 		return l = (l ^ r);
 	}
@@ -203,253 +138,153 @@ public:
 	/// Arithmetic Operators
 
 	/// Plus
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator+(const T1 & l, const T2 & r)
+	friend inline constexpr BigInteger operator+(const BigInteger & l, const BigInteger & r)
 	{
-		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
-		{
-			BigInteger sum;
-			((std::get<I>(sum.numbers) = std::get<I>(l.numbers) + std::get<I>(r.numbers)), ...);
-			((std::get<I>(sum.numbers) += (I > 0 && sum.numbers[I-1] < l.numbers[I-1]) ? 1 : 0), ...);
-			return sum;
-		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return static_cast<BigInteger>(l) + r;
-		}
-		else if constexpr (std::is_integral_v<T2>)
-		{
-			return l + static_cast<BigInteger>(r);
-		}
-		else
-		{
-			static_assert (!(std::is_integral_v<T1> || std::is_integral_v<T2>), "Wrong plus operator overload");
-			return r + l;
-		}
+		BigInteger sum;
+		((std::get<I>(sum.numbers) = std::get<I>(l.numbers) + std::get<I>(r.numbers)), ...);
+		((std::get<I>(sum.numbers) += (I > 0 && sum.numbers[I-1] < l.numbers[I-1]) ? 1 : 0), ...);
+		return sum;
 	}
 
-	template <ext_integral T2>
-	friend inline constexpr BigInteger & operator+=(BigInteger & l, const T2 & r){
+	friend inline constexpr BigInteger & operator+=(BigInteger & l, const BigInteger & r)
+	{
 		return l = l + r;
 	}
 
 	/// Minus
-	template <ext_integral T1, ext_integral T2>
-	friend constexpr inline BigInteger operator-(const T1 & l, const T2 & r)
+	friend constexpr inline BigInteger operator-(const BigInteger & l, const BigInteger & r)
 	{
-		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
-		{
-			BigInteger diff;
-			((std::get<I>(diff.numbers) = std::get<I>(l.numbers) - std::get<I>(r.numbers)), ...);
-			((std::get<I>(diff.numbers) -= (I > 0 && diff.numbers[I-1] > l.numbers[I-1]) ? 1 : 0), ...);
-			return diff;
-		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return static_cast<BigInteger>(l) - r;
-		}
-		else if constexpr (std::is_integral_v<T2>)
-		{
-			return l - static_cast<BigInteger>(r);
-		}
-		else
-		{
-			static_assert (!(std::is_integral_v<T1> || std::is_integral_v<T2>), "Wrong minus operator overload");
-			return r - l;
-		}
+		BigInteger diff;
+		((std::get<I>(diff.numbers) = std::get<I>(l.numbers) - std::get<I>(r.numbers)), ...);
+		((std::get<I>(diff.numbers) -= (I > 0 && diff.numbers[I-1] > l.numbers[I-1]) ? 1 : 0), ...);
+		return diff;
 	}
 
 
-	template <ext_integral T2>
-	friend inline constexpr BigInteger & operator-=(BigInteger & l, const T2 & r){
+	friend inline constexpr BigInteger & operator-=(BigInteger & l, const BigInteger & r){
 		return l = l - r;
 	}
 
 	/// Multiply
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator*(const T1 & l, const T2 & r){
-		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
+	friend inline constexpr BigInteger operator*(const BigInteger & l, const BigInteger & r)
+	{
+		BigInteger result;
+		std::array<B,sizeof... (I)*2> temp_l,temp_r;
+		std::array<std::array<B,sizeof... (I)*2>,sizeof... (I)*2> product;
+		constexpr auto num_bits = std::numeric_limits<B>::digits;
+		constexpr auto num_bits_half = num_bits >> 1;
+		constexpr B mask = std::numeric_limits<B>::max()>>num_bits_half;
+		for(std::size_t i = 0; i < sizeof... (I); i++)
 		{
-			BigInteger result;
-			std::array<B,sizeof... (I)*2> temp_l,temp_r;
-			std::array<std::array<B,sizeof... (I)*2>,sizeof... (I)*2> product;
-			constexpr auto num_bits = std::numeric_limits<B>::digits;
-			constexpr auto num_bits_half = num_bits >> 1;
-			constexpr B mask = std::numeric_limits<B>::max()>>num_bits_half;
-			for(std::size_t i = 0; i < sizeof... (I); i++)
+			std::size_t ii = i<<1;
+			temp_l[ii]   = l.numbers[i] & mask;
+			temp_l[ii+1] = l.numbers[i]>>num_bits_half;
+			temp_r[ii]   = r.numbers[i] & mask;
+			temp_r[ii+1] = r.numbers[i]>>num_bits_half;
+		}
+		for(std::size_t i = 0; i < temp_l.size(); i++)
+		{
+			for(std::size_t j = 0; j < temp_r.size(); j++)
 			{
-				std::size_t ii = i<<1;
-				temp_l[ii]   = l.numbers[i] & mask;
-				temp_l[ii+1] = l.numbers[i]>>num_bits_half;
-				temp_r[ii]   = r.numbers[i] & mask;
-				temp_r[ii+1] = r.numbers[i]>>num_bits_half;
+				product[i][j] = temp_l[i]*temp_r[j];
 			}
-			for(std::size_t i = 0; i < temp_l.size(); i++)
+		}
+		for(std::size_t jj = 0; jj < temp_l.size(); jj++)
+		{
+			for(std::size_t ii = 0; ii + jj < temp_r.size(); ii++)
 			{
-				for(std::size_t j = 0; j < temp_r.size(); j++)
+				auto j = jj>>1;
+				auto i = ii>>1;
+				auto temp0 = result.numbers[i+j];
+				decltype (temp0) temp1 = 0;
+				if((i+j) < result.numbers.size() - 1)
 				{
-					product[i][j] = temp_l[i]*temp_r[j];
+					temp1 = result.numbers[i+j+1];
 				}
-			}
-			for(std::size_t jj = 0; jj < temp_l.size(); jj++)
-			{
-				for(std::size_t ii = 0; ii + jj < temp_r.size(); ii++)
+
+				if(jj & 1 && ii & 1 && (i + j) < result.numbers.size() - 1)
 				{
-					auto j = jj>>1;
-					auto i = ii>>1;
-					auto temp0 = result.numbers[i+j];
-					decltype (temp0) temp1 = 0;
-					if((i+j) < result.numbers.size() - 1)
-					{
-						temp1 = result.numbers[i+j+1];
-					}
+					result.numbers[i+j+1] += product[ii][jj];
+				}
+				else if((jj & 1 || ii & 1) && (i + j) < result.numbers.size() - 1)
+				{
+					result.numbers[i+j] += product[ii][jj] << num_bits_half;
+					result.numbers[i+j+1] += product[ii][jj] >> num_bits_half;
+				}
+				else if((jj & 1 || ii & 1) && (i + j) < result.numbers.size() )
+				{
+					result.numbers[i+j] += (product[ii][jj] & mask) << num_bits_half;
+				}
+				else
+				{
+					result.numbers[i+j] += product[ii][jj];
+				}
 
-					if(jj & 1 && ii & 1 && (i + j) < result.numbers.size() - 1)
-					{
-						result.numbers[i+j+1] += product[ii][jj];
-					}
-					else if((jj & 1 || ii & 1) && (i + j) < result.numbers.size() - 1)
-					{
-						result.numbers[i+j] += product[ii][jj] << num_bits_half;
-						result.numbers[i+j+1] += product[ii][jj] >> num_bits_half;
-					}
-					else if((jj & 1 || ii & 1) && (i + j) < result.numbers.size() )
-					{
-						result.numbers[i+j] += (product[ii][jj] & mask) << num_bits_half;
-					}
-					else
-					{
-						result.numbers[i+j] += product[ii][jj];
-					}
-
+				if((i+j) < result.numbers.size() - 2 && temp1 > result.numbers[i+j+1])
+				{
+					result.numbers[i+j+2] += 1;
+				}
+				if((i+j) < result.numbers.size() - 1 && temp0 > result.numbers[i+j])
+				{
+					temp1 = result.numbers[i+j+1];
+					result.numbers[i+j+1] += 1;
 					if((i+j) < result.numbers.size() - 2 && temp1 > result.numbers[i+j+1])
 					{
 						result.numbers[i+j+2] += 1;
 					}
-					if((i+j) < result.numbers.size() - 1 && temp0 > result.numbers[i+j])
-					{
-						temp1 = result.numbers[i+j+1];
-						result.numbers[i+j+1] += 1;
-						if((i+j) < result.numbers.size() - 2 && temp1 > result.numbers[i+j+1])
-						{
-							result.numbers[i+j+2] += 1;
-						}
-					}
 				}
 			}
-			return result;
 		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return static_cast<BigInteger>(l) * r;
-		}
-		else if constexpr (std::is_integral_v<T2>)
-		{
-			return l * static_cast<BigInteger>(r);
-		}
-		else
-		{
-			static_assert (!(std::is_integral_v<T1> || std::is_integral_v<T2>), "Wrong multiply operator overload");
-			return r * l;
-		}
+		return result;
 	}
 
-	template <ext_integral T2 >
-	friend inline constexpr BigInteger & operator*=(BigInteger & l, const T2 & r){
+	friend inline constexpr BigInteger & operator*=(BigInteger & l, const BigInteger & r){
 		return l = l * r;
 	}
 
 	/// Divide
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator/(const T1 & l, const T2 & r){
-		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
-		{
-			return divmod(l,r).first;
-		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return static_cast<BigInteger>(l) / r;
-		}
-		else if constexpr (std::is_integral_v<T2>)
-		{
-			return l / static_cast<BigInteger>(r);
-		}
-		else
-		{
-			static_assert (!(std::is_integral_v<T1> || std::is_integral_v<T2>), "Wrong divide operator overload");
-			return r / l;
-		}
+	friend inline constexpr BigInteger operator/(const BigInteger & l, const BigInteger & r){
+		return divmod(l,r).first;
 	}
 
-	template <ext_integral T2 >
-	friend inline constexpr BigInteger & operator/=(BigInteger & l, const T2 & r){
+	friend inline constexpr BigInteger & operator/=(BigInteger & l, const BigInteger & r){
 		return l = l / r;
 	}
 
 	/// Modulo
-	template <ext_integral T1, ext_integral T2>
-	friend inline constexpr BigInteger operator%(const T1 & l, const T2 & r){
-		if constexpr (is_instance<T1,BigInteger>{} && is_instance<T2,BigInteger>{})
-		{
-			return divmod(l,r).second;
-		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return static_cast<BigInteger>(l) % r;
-		}
-		else if constexpr (std::is_integral_v<T2>)
-		{
-			return l % static_cast<BigInteger>(r);
-		}
-		else
-		{
-			static_assert (!(std::is_integral_v<T1> || std::is_integral_v<T2>), "Wrong modulo operator overload");
-			return r % l;
-		}
+	friend inline constexpr BigInteger operator%(const BigInteger & l, const BigInteger & r){
+		return divmod(l,r).second;
 	}
 
-	template <ext_integral T2 >
-	friend inline constexpr BigInteger & operator%=(BigInteger & l, const T2 & r){
+	friend inline constexpr BigInteger & operator%=(BigInteger & l, const BigInteger & r){
 		return l = l % r;
 	}
 
 	/// Bit Shift Operators
 
 	/// Shift left
-	template <ext_integral T1, std::unsigned_integral T2>
-	friend inline constexpr BigInteger operator<<(const T1 & l, const T2 & r)
+	template <std::unsigned_integral T2>
+	friend inline constexpr BigInteger operator<<(const BigInteger & l, const T2 & r)
 	{
-		if constexpr (std::is_same_v<T1,BigInteger>)
+		BigInteger result;
+		std::size_t msb = (sizeof(sizeof (B))<<3) - __builtin_clzl(sizeof (B)) - 1;
+		std::size_t chunk_shift = r>>(3+msb);
+		std::size_t left = r - ((chunk_shift*sizeof (B))<<3);
+		for(std::size_t i = chunk_shift; i < result.numbers.size(); i++)
 		{
-			BigInteger result;
-			std::size_t msb = (sizeof(sizeof (B))<<3) - __builtin_clzl(sizeof (B)) - 1;
-			std::size_t chunk_shift = r>>(3+msb);
-			std::size_t left = r - ((chunk_shift*sizeof (B))<<3);
-			for(std::size_t i = chunk_shift; i < result.numbers.size(); i++)
+			result.numbers[i] = l.numbers[i-chunk_shift];
+		}
+		if(left) // 0...sizeof(B)*8 bit shift is left
+		{
+			result.numbers[chunk_shift] <<= left;
+			std::size_t right_shift = (sizeof (B)<<3)-left;
+			for(std::size_t i = chunk_shift + 1; i < l.numbers.size(); i++)
 			{
-				result.numbers[i] = l.numbers[i-chunk_shift];
+				result.numbers[i] <<= left;
+				result.numbers[i] |= l.numbers[i-chunk_shift-1] >> right_shift;
 			}
-			if(left) // 0...sizeof(B)*8 bit shift is left
-			{
-				result.numbers[chunk_shift] <<= left;
-				std::size_t right_shift = (sizeof (B)<<3)-left;
-				for(std::size_t i = chunk_shift + 1; i < l.numbers.size(); i++)
-				{
-					result.numbers[i] <<= left;
-					result.numbers[i] |= l.numbers[i-chunk_shift-1] >> right_shift;
-				}
-			}
-			return result;
 		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return static_cast<BigInteger>(l) << r;
-		}
-		else
-		{
-			static_assert (!(std::is_integral_v<T1>), "Wrong shift left operator overload");
-			return r << l;
-		}
+		return result;
 	}
 
 	template <std::unsigned_integral T2>
@@ -459,40 +294,28 @@ public:
 	}
 
 	/// Shift right
-	template <ext_integral T1, std::unsigned_integral T2>
-	friend inline constexpr BigInteger operator>>(const T1 & l, const T2 & r)
+	template <std::unsigned_integral T2>
+	friend inline constexpr BigInteger operator>>(const BigInteger & l, const T2 & r)
 	{
-		if constexpr (std::is_same_v<T1,BigInteger>)
+		BigInteger result;
+		std::size_t msb = (sizeof(sizeof (B))<<3) - __builtin_clzl(sizeof (B)) - 1;
+		std::size_t chunk_shift = r>>(3+msb);
+		std::size_t left = r - ((chunk_shift*sizeof (B))<<3);
+		for(std::size_t i = chunk_shift; i < result.numbers.size(); i++)
 		{
-			BigInteger result;
-			std::size_t msb = (sizeof(sizeof (B))<<3) - __builtin_clzl(sizeof (B)) - 1;
-			std::size_t chunk_shift = r>>(3+msb);
-			std::size_t left = r - ((chunk_shift*sizeof (B))<<3);
-			for(std::size_t i = chunk_shift; i < result.numbers.size(); i++)
+			result.numbers[i-chunk_shift] = l.numbers[i];
+		}
+		if(left) // 0...sizeof(B)*8 bit shift is left
+		{
+			result.numbers[l.numbers.size() - chunk_shift - 1] >>= left;
+			std::size_t left_shift = (sizeof (B)<<3)-left;
+			for(std::size_t i = 0; i < l.numbers.size() - chunk_shift - 1; i++)
 			{
-				result.numbers[i-chunk_shift] = l.numbers[i];
+				result.numbers[i] >>= left;
+				result.numbers[i] |= l.numbers[i + chunk_shift + 1] << left_shift;
 			}
-			if(left) // 0...sizeof(B)*8 bit shift is left
-			{
-				result.numbers[l.numbers.size() - chunk_shift - 1] >>= left;
-				std::size_t left_shift = (sizeof (B)<<3)-left;
-				for(std::size_t i = 0; i < l.numbers.size() - chunk_shift - 1; i++)
-				{
-					result.numbers[i] >>= left;
-					result.numbers[i] |= l.numbers[i + chunk_shift + 1] << left_shift;
-				}
-			}
-			return result;
 		}
-		else if constexpr (std::is_integral_v<T1>)
-		{
-			return static_cast<BigInteger>(l) << r;
-		}
-		else
-		{
-			static_assert (!(std::is_integral_v<T1>), "Wrong shift left operator overload");
-			return r << l;
-		}
+		return result;
 	}
 
 	template <std::unsigned_integral T2>
@@ -548,7 +371,6 @@ public:
 		return out > 0 ? out - 1 : 0;
 	}
 
-	static constexpr std::size_t bit_size = sizeof(B) * sizeof... (I) * 8;
 	static consteval BigInteger max() noexcept
 	{
 		BigInteger n;
@@ -587,6 +409,8 @@ public:
 			return stoi<0>(std::forward<decltype (digits_array)>(digits_array),10u);
 		}
 	}
+
+	static constexpr std::size_t bit_size = sizeof(B) * sizeof... (I) * 8;
 
 private:
 	template<std::unsigned_integral T>
