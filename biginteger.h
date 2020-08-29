@@ -58,7 +58,7 @@ public:
 
 	/// Constructors
 	constexpr BigInteger() = default;
-	constexpr BigInteger(const BigInteger & n) = delete;
+	constexpr BigInteger(const BigInteger & n) = default;
 	constexpr BigInteger(BigInteger && n) = default;
 
 	template<std::unsigned_integral ...T, std::enable_if_t<sizeof... (T) <= sizeof... (I),int> = 0>
@@ -459,9 +459,11 @@ private:
 		}
 		else if(l < r)
 		{
-			return std::make_pair(BigInteger(0u),l<<0u);  // use noop to copy l to result
+			/// use copy constructor for l
+			return std::make_pair(0u,l);
 		}
-		BigInteger ll = l << 0u; // use noop to copy const value l to ll
+		/// use copy constructor for l
+		BigInteger ll = l;
 		BigInteger rr = r << (msb_l-msb_r);
 		BigInteger i = one << (msb_l-msb_r);
 		BigInteger div,mod;
