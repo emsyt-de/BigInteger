@@ -85,10 +85,12 @@ public:
 	constexpr BigInteger & operator=(BigInteger && n) = default;
 
 	/// Typecast Operators
-//	constexpr operator bool() const
-//	{
-//		return (numbers[I] || ...);
-//	}
+
+	/// explicit keyword resolves ambiguous problem with convert constructor
+	explicit constexpr operator bool() const
+	{
+		return (numbers[I] || ...);
+	}
 
 	/// Bitwise Operators
 
