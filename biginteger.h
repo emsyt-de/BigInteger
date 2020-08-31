@@ -27,6 +27,7 @@
 #include <array>
 #include <functional>
 #include <iomanip>
+#include <iostream>
 
 typedef __uint128_t uint128_t;
 typedef __int128_t int128_t;
@@ -54,6 +55,8 @@ template<std::unsigned_integral B, std::size_t ...I>
 class BigInteger
 {
 
+	template<std::unsigned_integral ...T>
+	using array_condition = std::bool_constant<sizeof... (T) == sizeof... (I) && std::is_same_v<T..., B>>;
 public:
 
 	/// Constructors
@@ -61,10 +64,17 @@ public:
 	constexpr BigInteger(const BigInteger & n) = default;
 	constexpr BigInteger(BigInteger && n) = default;
 
-	template<std::unsigned_integral ...T, std::enable_if_t<sizeof... (T) <= sizeof... (I),int> = 0>
+	/// Exclude array condition resolves ambiguous situation for parameter pack and std::array constructor
+	template<std::unsigned_integral ...T, std::enable_if_t<(sizeof... (T) <= sizeof... (I)) && !array_condition<T...>::value,int> = 0>
 	constexpr BigInteger(const T & ... n)
 		: numbers{n...}
 	{}
+
+	constexpr BigInteger(std::array<B,sizeof... (I)>&& arr)
+		: numbers(std::forward<std::array<B,sizeof... (I)>>(arr))
+	{
+//		std::cout<<"Hier\n";
+	}
 
 	/// Assignment Operators
 	BigInteger & operator=(const BigInteger & n) = delete;
@@ -83,7 +93,7 @@ public:
 	/// And
 	friend inline constexpr BigInteger operator&(const BigInteger & l, const BigInteger & r)
 	{
-		return {std::forward<B>(l.numbers[I] & r.numbers[I]) ...};
+		return {{(l.numbers[I] & r.numbers[I])...}};
 	}
 
 	friend inline constexpr BigInteger& operator&=(BigInteger & l, const BigInteger & r)
@@ -94,7 +104,7 @@ public:
 	/// Or
 	friend inline constexpr BigInteger operator|(const BigInteger & l, const BigInteger & r)
 	{
-		return {std::forward<B>(l.numbers[I] | r.numbers[I]) ...};
+		return {{(l.numbers[I] | r.numbers[I]) ...}};
 	}
 
 	friend inline constexpr BigInteger& operator|=(BigInteger & l, const BigInteger & r)
@@ -105,7 +115,7 @@ public:
 	/// Xor
 	friend inline constexpr BigInteger operator^(const BigInteger & l, const BigInteger & r)
 	{
-		return {std::forward<B>(l.numbers[I] ^ r.numbers[I]) ...};
+		return {{(l.numbers[I] ^ r.numbers[I]) ...}};
 	}
 
 	friend inline constexpr BigInteger& operator^=(BigInteger & l, const BigInteger & r)
@@ -114,9 +124,9 @@ public:
 	}
 
 	/// Invert operator
-	inline BigInteger operator~() const
+	inline constexpr BigInteger operator~() const
 	{
-		return {std::forward<B>(~numbers[I])...};
+		return {{(~numbers[I])...}};
 	}
 
 	/// Comparison Operators
@@ -329,7 +339,6 @@ public:
 	/// pre increment
 	friend BigInteger & operator++(BigInteger & hs)
 	{
-//		static constexpr BigInteger uint256_1(1);
 		hs += 1u;
 		return hs;
 	}

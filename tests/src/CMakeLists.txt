@@ -7,6 +7,7 @@ target_sources(BigIntegerTests PRIVATE
 	mult.cpp
 	div.cpp
 	shift.cpp
+	invert.cpp
 	functions.cpp
 )
 
