@@ -34,12 +34,6 @@ typedef __int128_t int128_t;
 
 namespace biginteger {
 
-template <class, template <typename,std::size_t ...> class>
-struct is_instance : public std::false_type {};
-
-template <typename B, size_t... T, template <typename,std::size_t ...> class U>
-struct is_instance<U<B,T...>, U> : public std::true_type {};
-
 inline std::ostream & operator<<(std::ostream & stream, const uint128_t & r)
 {
 	uint64_t l = static_cast<uint64_t>(r);
