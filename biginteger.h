@@ -329,34 +329,31 @@ public:
 	/// pre increment
 	friend BigInteger & operator++(BigInteger & hs)
 	{
-		static constexpr BigInteger uint256_1(1);
-		hs += uint256_1;
+//		static constexpr BigInteger uint256_1(1);
+		hs += 1u;
 		return hs;
 	}
 
 	/// post increment
 	friend BigInteger operator++(BigInteger & hs, int)
 	{
-		static constexpr BigInteger uint256_1(1);
 		auto temp(hs);
-		hs += uint256_1;
+		hs += 1u;
 		return temp;
 	}
 
 	/// pre decrement
 	friend BigInteger & operator--(BigInteger & hs)
 	{
-		static constexpr BigInteger uint256_1(1u);
-		hs -= uint256_1;
+		hs -= 1u;
 		return hs;
 	}
 
 	/// post decrement
 	friend BigInteger operator--(BigInteger & hs, int)
 	{
-		static constexpr BigInteger uint256_1(1u);
 		auto temp(hs);
-		hs -= uint256_1;
+		hs -= 1u;
 		return temp;
 	}
 
@@ -502,10 +499,9 @@ private:
 
 	static constexpr std::pair<BigInteger,BigInteger> divmod(const BigInteger & l, const BigInteger & r)
 	{
-		auto msb_l = bits(l);
-		auto msb_r = bits(r);
 		BigInteger one(1u);
 		BigInteger zero(0u);
+		auto msb_r = bits(r);
 		if(r == zero)
 		{
 			throw std::invalid_argument("Devide with zero!");
@@ -515,10 +511,16 @@ private:
 			/// use copy constructor for l
 			return std::make_pair(0u,l);
 		}
+		else if (one << msb_r == r)  // check if r is from type 2^n
+		{
+			return std::make_pair(l>>msb_r, l & (r - 1u));
+		}
+		auto msb_l = bits(l);
+		auto diff_msb = msb_l - msb_r;
 		/// use copy constructor for l
 		BigInteger ll = l;
-		BigInteger rr = r << (msb_l-msb_r);
-		BigInteger i = one << (msb_l-msb_r);
+		BigInteger rr = r << diff_msb;
+		BigInteger i = one << diff_msb;
 		BigInteger div,mod;
 		while(i > zero)
 		{
@@ -550,7 +552,7 @@ consteval uint128_ct operator "" _num() noexcept
 }
 
 namespace uint256_t {
-typedef BigInteger<uint32_t,0,1,2,3,4,5,6,7> uint256_t;
+typedef BigInteger<uint128_t,0,1> uint256_t;
 
 /// literal operator
 template<char ...digits>
