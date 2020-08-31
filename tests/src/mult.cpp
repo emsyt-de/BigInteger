@@ -17,7 +17,7 @@
 
 #include "testbiginteger.h"
 
-static constexpr bool proof_const = false;
+static constexpr bool proof_const = true;
 
 TYPED_TEST(BigIntegerTests, Multiply)
 {
