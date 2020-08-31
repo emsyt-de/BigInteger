@@ -21,8 +21,8 @@ TYPED_TEST(BigIntegerTests, BitShiftLeft)
 	}
 
 	///  arbitrary number
-	val = 100000000lu;
-	exp_val = 100000000lu;
+	val = 100000000u;
+	exp_val = 100000000u;
 	for(std::size_t i = 0; i < TypeParam::bit_size; i++) {
 		EXPECT_EQ(val << i, exp_val);
 		exp_val *= 2u;
@@ -36,8 +36,8 @@ TYPED_TEST(BigIntegerTests, BitShiftLeft)
 	}
 
 	// operator<<=
-	val = 100000000lu;
-	exp_val = 100000000lu;
+	val = 100000000u;
+	exp_val = 100000000u;
 	for(std::size_t i = 0; i < TypeParam::bit_size; i++){ // 1 is already a bit
 		EXPECT_EQ(val  <<= 1u, exp_val <<= 1u);
 	}
@@ -61,8 +61,8 @@ TYPED_TEST(BigIntegerTests, BitShiftRight)
 	}
 
 	///  arbitrary number
-	val = TypeParam::max() - 100000000lu;
-	exp_val = TypeParam::max() - 100000000lu;
+	val = TypeParam::max() - 100000000u;
+	exp_val = TypeParam::max() - 100000000u;
 	for(std::size_t i = 0; i < TypeParam::bit_size; i++) {
 		EXPECT_EQ(val >> i, exp_val);
 		exp_val /= 2u;

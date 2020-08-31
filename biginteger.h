@@ -324,6 +324,55 @@ public:
 		return l = l >> r;
 	}
 
+	/// Increment Operators
+
+	/// pre increment
+	friend BigInteger & operator++(BigInteger & hs)
+	{
+		static constexpr BigInteger uint256_1(1);
+		hs += uint256_1;
+		return hs;
+	}
+
+	/// post increment
+	friend BigInteger operator++(BigInteger & hs, int)
+	{
+		static constexpr BigInteger uint256_1(1);
+		auto temp(hs);
+		hs += uint256_1;
+		return temp;
+	}
+
+	/// pre decrement
+	friend BigInteger & operator--(BigInteger & hs)
+	{
+		static constexpr BigInteger uint256_1(1u);
+		hs -= uint256_1;
+		return hs;
+	}
+
+	/// post decrement
+	friend BigInteger operator--(BigInteger & hs, int)
+	{
+		static constexpr BigInteger uint256_1(1u);
+		auto temp(hs);
+		hs -= uint256_1;
+		return temp;
+	}
+
+	/// positive sign operator
+	friend BigInteger operator+(const BigInteger & hs)
+	{
+		return hs;
+	}
+
+	/// negative sign operator
+	friend BigInteger operator-(const BigInteger & hs)
+	{
+		static constexpr BigInteger uint256_1(1);
+		return ~hs + uint256_1;
+	}
+
 	/// IO Operators
 	friend std::ostream & operator<<(std::ostream & stream, const BigInteger & r)
 	{
@@ -352,9 +401,13 @@ public:
 						out -= static_cast<std::size_t>(__builtin_clzll(*it));
 					}
 				}
-				else if constexpr(sizeof (B) <= sizeof (uint64_t))
+				else if constexpr(sizeof (B) == sizeof (uint64_t))
 				{
 					out -= static_cast<std::size_t>(__builtin_clzll(*it));
+				}
+				else if constexpr(sizeof (B) == sizeof (uint32_t))
+				{
+					out -= static_cast<std::size_t>(__builtin_clz(*it));
 				}
 				else
 				{
@@ -497,7 +550,7 @@ consteval uint128_ct operator "" _num() noexcept
 }
 
 namespace uint256_t {
-typedef BigInteger<uint128_t,0,1> uint256_t;
+typedef BigInteger<uint32_t,0,1,2,3,4,5,6,7> uint256_t;
 
 /// literal operator
 template<char ...digits>
