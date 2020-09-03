@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(BigInteger)
 
-add_compile_options(-Wall -Wextra -pedantic -Werror -fconstexpr-ops-limit=243554432)
+target_compile_options(BigInteger PUBLIC -fconstexpr-ops-limit=1243554432)
+target_compile_options(BigInteger PRIVATE -Wall -Wextra -pedantic -Werror)
 
 target_sources(BigInteger PRIVATE
 	biginteger.h
