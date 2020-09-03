@@ -68,12 +68,12 @@ TYPED_TEST(BigIntegerTests, Multiply)
 	{
 		using namespace uint512_t;
 		a0 = 0xf_num;
-		a1 = 0xffffffff_num;
+		a1 = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_num;
 		a2 = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num;
 		b0 = 0x0_num;
-		b1 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346789abc_num;
+		b1 = 3u;
 		b2 = 0x893ace7477dca3262672246789abc346789abc346789abc346789abc_num;
-		c1 = 0x346789ab8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edef21783321ef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8b9876544_num;
+		c1 = 0x17fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc7_num;
 		c2 = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num;
 
 		if constexpr(proof_const)

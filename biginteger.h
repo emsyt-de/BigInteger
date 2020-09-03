@@ -144,9 +144,12 @@ public:
 	/// Plus
 	friend inline constexpr BigInteger operator+(const BigInteger & l, const BigInteger & r)
 	{
-		BigInteger sum;
-		((std::get<I>(sum.numbers) = std::get<I>(l.numbers) + std::get<I>(r.numbers)), ...);
-		((std::get<I>(sum.numbers) += (I > 0 && sum.numbers[I-1] < l.numbers[I-1]) ? 1 : 0), ...);
+		BigInteger sum{{(std::get<I>(l.numbers) + std::get<I>(r.numbers))...}};
+		BigInteger carry{{(sum.numbers[I] < l.numbers[I])...}};
+		auto temp = sum;
+		((std::get<I>(sum.numbers) += I > 0  ? carry.numbers[I-1] : 0), ...);
+		BigInteger carry1{{(sum.numbers[I] < temp.numbers[I])...}};
+		((std::get<I>(sum.numbers) += I > 0 ? carry1.numbers[I-1] : 0), ...);
 		return sum;
 	}
 
@@ -158,9 +161,12 @@ public:
 	/// Minus
 	friend constexpr inline BigInteger operator-(const BigInteger & l, const BigInteger & r)
 	{
-		BigInteger diff;
-		((std::get<I>(diff.numbers) = std::get<I>(l.numbers) - std::get<I>(r.numbers)), ...);
-		((std::get<I>(diff.numbers) -= (I > 0 && diff.numbers[I-1] > l.numbers[I-1]) ? 1 : 0), ...);
+		BigInteger diff{{(std::get<I>(l.numbers) - std::get<I>(r.numbers))...}};
+		BigInteger carry{{(diff.numbers[I] > l.numbers[I])...}};
+		auto temp = diff;
+		((std::get<I>(diff.numbers) -= I > 0 ? carry.numbers[I-1] : 0), ...);
+		BigInteger carry1{{(diff.numbers[I] > temp.numbers[I])...}};
+		((std::get<I>(diff.numbers) -= I > 0 ? carry1.numbers[I-1] : 0), ...);
 		return diff;
 	}
 

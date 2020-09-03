@@ -17,7 +17,7 @@
 
 #include "testbiginteger.h"
 
-static constexpr bool proof_const = true;
+static constexpr bool proof_const = false;
 
 TYPED_TEST(BigIntegerTests, Divide)
 {
@@ -38,7 +38,7 @@ TYPED_TEST(BigIntegerTests, Divide)
 			/// Test compile time computing
 			constexpr TypeParam ab3 = 0xff4b9c63cbd74d45_num / 0xff45d391f11421ae_num;
 			constexpr TypeParam c3  = 0x1u;
-			static_assert (ab3 == c3, "Multiply failed");
+			static_assert (ab3 == c3, "Divide failed");
 		}
 	}
 	else if constexpr(TypeParam::bit_size == 256)
@@ -62,10 +62,10 @@ TYPED_TEST(BigIntegerTests, Divide)
 	{
 		using namespace uint512_t;
 		a0 = 0xf_num;
-		a1 = 0xf46789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num;
+		a1 = 0x17fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc4_num;
 		b0 = 0x0_num;
-		b1 = 0xf789abc346789ab8e0e81dbb63e5be577e2a2b1bc789ab8edeeeef289abc346789abc346789abc346789_num;
-		c1 = 0xfcc27208580b0ffd63986f717697c3b510fc_num;
+		b1 =  0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_num;
+		c1 = 2u;
 
 		if constexpr(proof_const)
 		{

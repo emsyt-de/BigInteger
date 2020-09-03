@@ -44,10 +44,10 @@ TYPED_TEST(BigIntegerTests, Modulo)
 	else if constexpr(TypeParam::bit_size == 256)
 	{
 		using namespace uint256_t;
-		a0 = 0xf_num;
-		a1 = 0x8000000000000000_num;
+		a0 = 0x17fff_num;
+		a1 = 0x80000000000000000000000000000_num;
 		b0 = 0x0_num;
-		b1 = 0x80000000_num;
+		b1 = 0x20000000000000000000000000_num;
 		c1 = 0x0_num;
 
 		if constexpr(proof_const)
@@ -62,10 +62,10 @@ TYPED_TEST(BigIntegerTests, Modulo)
 	{
 		using namespace uint512_t;
 		a0 = 0xf_num;
-		a1 = 0xf46789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num;
+		a1 = 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb0_num;
 		b0 = 0x0_num;
-		b1 = 0xf789abc346789ab8e0e81dbb63e5be577e2a2b1bc789ab8edeeeef289abc346789abc346789abc346789_num;
-		c1 = 0x2ad9dd29f03a4cefa131ea7c36052af84f4f6622eb12dedbd433560237ce1670901b91f59c9970c0486a_num;
+		b1 = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_num; // 2^255-19
+		c1 = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe9_num;
 
 		if constexpr(proof_const)
 		{
