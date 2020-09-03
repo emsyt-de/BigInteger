@@ -64,16 +64,16 @@ public:
 		: numbers{n...}
 	{}
 
-	constexpr BigInteger(std::array<B,sizeof... (I)>&& arr)
-		: numbers(std::forward<std::array<B,sizeof... (I)>>(arr))
-	{
-//		std::cout<<"Hier\n";
-	}
-
 	/// Assignment Operators
 	BigInteger & operator=(const BigInteger & n) = delete;
 	constexpr BigInteger & operator=(BigInteger && n) = default;
 
+protected:
+	constexpr BigInteger(std::array<B,sizeof... (I)>&& arr)
+		: numbers(std::forward<std::array<B,sizeof... (I)>>(arr))
+	{}
+
+public:
 	/// Typecast Operators
 
 	/// explicit keyword resolves ambiguous problem with convert constructor
@@ -524,8 +524,8 @@ private:
 		BigInteger ll = l;
 		BigInteger rr = r << diff_msb;
 		BigInteger i = one << diff_msb;
-		BigInteger div,mod;
-		while(i > zero)
+		BigInteger div;
+		while(i)
 		{
 			if(ll >= rr)
 			{
@@ -535,7 +535,7 @@ private:
 			rr >>= 1u;
 			i >>= 1u;
 		}
-		return std::make_pair(std::forward<BigInteger>(div),std::forward<BigInteger>(mod));
+		return std::make_pair(std::forward<BigInteger>(div),std::forward<BigInteger>(ll));
 	}
 
 	/// {} makes value initialization for non class non array types like int to its default value 0
