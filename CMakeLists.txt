@@ -17,4 +17,6 @@ target_include_directories(BigInteger PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_target_properties(BigInteger PROPERTIES LINKER_LANGUAGE CXX)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
 add_subdirectory(tests)

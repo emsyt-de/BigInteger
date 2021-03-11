@@ -1,0 +1,26 @@
+stages:
+  - build
+  - test
+
+build_job:
+  stage: build
+  tags: 
+    - cmake
+    - c++
+  artifacts:
+    paths:
+      - bin
+  script:
+    - cmake -G Ninja .
+    - cmake --build . --target all
+
+test_job:
+  stage: test
+  needs:
+    - build_job
+  tags:
+    - shell
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - ./bin/BigIntegerTests
