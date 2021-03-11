@@ -24,7 +24,7 @@ static constexpr bool proof_const = true;
 TYPED_TEST(BigIntegerTests, Invert)
 {
 	constexpr TypeParam a = TypeParam::max();
-	constexpr TypeParam b = 0u;
+	constexpr TypeParam b = TypeParam::min();
 
 	if constexpr (proof_const)
 	{

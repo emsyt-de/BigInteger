@@ -26,6 +26,6 @@ template <typename T>
 class BigIntegerTests : public ::testing::Test {
 };
 
-typedef Types<uint128_ct::uint128_ct, uint256_t::uint256_t, uint512_t::uint512_t, uint1024_t::uint1024_t> BigIntegerTypes;
+typedef Types<uint128_t, uint256_t, uint512_t, int512_t, uint1024_t> BigIntegerTypes;
 
 TYPED_TEST_SUITE(BigIntegerTests, BigIntegerTypes);

@@ -26,7 +26,7 @@ TYPED_TEST(BigIntegerTests, Divide)
 	TypeParam  c1;
 	if constexpr(TypeParam::bit_size == 128)
 	{
-		using namespace uint128_ct;
+		using namespace uint128;
 		a0 = 0xf_num;
 		a1 = 0xffffffff322123ff_num;
 		b0 = 0x0_num;
@@ -43,7 +43,7 @@ TYPED_TEST(BigIntegerTests, Divide)
 	}
 	else if constexpr(TypeParam::bit_size == 256)
 	{
-		using namespace uint256_t;
+		using namespace uint256;
 		a0 = 0xf_num;
 		a1 = 0xffffffff_num;
 		b0 = 0x0_num;
@@ -60,25 +60,46 @@ TYPED_TEST(BigIntegerTests, Divide)
 	}
 	else if constexpr(TypeParam::bit_size == 512)
 	{
-		using namespace uint512_t;
-		a0 = 0xf_num;
-		a1 = 0x17fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc4_num;
-		b0 = 0x0_num;
-		b1 =  0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_num;
-		c1 = 2u;
-
-		if constexpr(proof_const)
+		if constexpr(std::is_unsigned_v<TypeParam>)
 		{
-			/// Test compile time computing
-			constexpr TypeParam ab3 = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num
-					/ 0x893ace7477dca3262672246789abc346789abc346789abc346789abc_num;
-			constexpr TypeParam c3  = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num;
-			static_assert (ab3 == c3, "Divide failed");
+			using namespace uint512;
+			a0 = 0xf_num;
+			a1 = 0x17fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc4_num;
+			b0 = 0x0_num;
+			b1 =  0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_num;
+			c1 = 2u;
+
+			if constexpr(proof_const)
+			{
+				/// Test compile time computing
+				constexpr TypeParam ab3 = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num
+						/ 0x893ace7477dca3262672246789abc346789abc346789abc346789abc_num;
+				constexpr TypeParam c3  = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num;
+				static_assert (ab3 == c3, "Divide failed");
+			}
+		}
+		else if constexpr(std::is_signed_v<TypeParam>)
+		{
+			using namespace int512;
+			a0 = 0xf_num;
+			a1 = 0x17fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc4_num;
+			b0 = 0x0_num;
+			b1 =  0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_num;
+			c1 = 2u;
+
+			if constexpr(proof_const)
+			{
+				/// Test compile time computing
+				constexpr TypeParam ab3 = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num
+						/ 0x893ace7477dca3262672246789abc346789abc346789abc346789abc_num;
+				constexpr TypeParam c3  = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num;
+				static_assert (ab3 == c3, "Divide failed");
+			}
 		}
 	}
 	else if constexpr(TypeParam::bit_size == 1024)
 	{
-		using namespace uint1024_t;
+		using namespace uint1024;
 		a0 = 0xf_num;
 		a1 = 0x18b035581830722386091c50d922d0779b4364b931ba579aa3cd50aadc768500498d1bc95f9ffb2d91685cdf47c1c7a705cd635cacae5ea65b7789ed126b8a8413c5d7025e4fd791011bbf02e68936c9c131c835c338b254a00dcd5a42df364a3cffba6ebfd2066d6b13e5ad895850cc41f01633dab4aa76_num;
 		b0 = 0x0_num;

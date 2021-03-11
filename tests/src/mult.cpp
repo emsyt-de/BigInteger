@@ -17,7 +17,7 @@
 
 #include "testbiginteger.h"
 
-static constexpr bool proof_const = true;
+static constexpr bool proof_const = false;
 
 TYPED_TEST(BigIntegerTests, Multiply)
 {
@@ -26,7 +26,7 @@ TYPED_TEST(BigIntegerTests, Multiply)
 	TypeParam  c0,c1,c2;
 	if constexpr(TypeParam::bit_size == 128)
 	{
-		using namespace uint128_ct;
+		using namespace uint128;
 		a0 = 0xf_num;
 		a1 = 0xffffffff_num;
 		a2 = 0xff45d391f11421ae_num;
@@ -46,7 +46,7 @@ TYPED_TEST(BigIntegerTests, Multiply)
 	}
 	else if constexpr(TypeParam::bit_size == 256)
 	{
-		using namespace uint256_t;
+		using namespace uint256;
 		a0 = 0xf_num;
 		a1 = 0xffffffff_num;
 		a2 = 0xfffffffff_num;
@@ -66,7 +66,9 @@ TYPED_TEST(BigIntegerTests, Multiply)
 	}
 	else if constexpr(TypeParam::bit_size == 512)
 	{
-		using namespace uint512_t;
+		if constexpr(std::is_unsigned_v<TypeParam>)
+		{
+		using namespace uint512;
 		a0 = 0xf_num;
 		a1 = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_num;
 		a2 = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num;
@@ -84,10 +86,11 @@ TYPED_TEST(BigIntegerTests, Multiply)
 		constexpr TypeParam c3  = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num;
 		static_assert (ab3 == c3, "Multiply failed");
 		}
+		}
 	}
 	else if constexpr(TypeParam::bit_size == 1024)
 	{
-		using namespace uint1024_t;
+		using namespace uint1024;
 		a0 = 0xf_num;
 		a1 = 0xffffffff_num;
 		a2 = 0x346789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num;

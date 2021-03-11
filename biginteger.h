@@ -29,12 +29,9 @@
 #include <iomanip>
 #include <iostream>
 
-typedef __uint128_t uint128_t;
-typedef __int128_t int128_t;
-
 namespace biginteger {
 
-inline std::ostream & operator<<(std::ostream & stream, const uint128_t & r)
+inline std::ostream & operator<<(std::ostream & stream, const __uint128_t & r)
 {
 	uint64_t l = static_cast<uint64_t>(r);
 	uint64_t u = r>>64;
@@ -45,23 +42,45 @@ inline std::ostream & operator<<(std::ostream & stream, const uint128_t & r)
 
 }
 
-template<std::unsigned_integral B, std::size_t ...I>
+template<std::unsigned_integral B, bool is_signed, std::size_t ...I>
 class BigInteger
 {
 
-	template<std::unsigned_integral ...T>
-	using array_condition = std::bool_constant<sizeof... (T) == sizeof... (I) && std::is_same_v<T..., B>>;
-public:
+	friend class BigInteger<B,!is_signed,I...>;
 
+public:
 	/// Constructors
 	constexpr BigInteger() = default;
 	constexpr BigInteger(const BigInteger & n) = default;
 	constexpr BigInteger(BigInteger && n) = default;
 
-	/// Exclude array condition resolves ambiguous situation for parameter pack and std::array constructor
-	template<std::unsigned_integral ...T, std::enable_if_t<(sizeof... (T) <= sizeof... (I)) && !array_condition<T...>::value,int> = 0>
-	constexpr BigInteger(const T & ... n)
-		: numbers{n...}
+	template<std::unsigned_integral T>
+	constexpr BigInteger(const T & n)
+		: numbers{n}
+	{}
+
+	template<std::signed_integral T>
+	constexpr BigInteger(const T & n)
+	{
+		if(n < 0)
+		{
+			std::fill(numbers.begin(),numbers.end(),std::numeric_limits<B>::max());
+			numbers[0] -= (n + 1);
+		}
+		else
+		{
+			numbers[0] = n;
+		}
+	}
+
+	/// Convert signedness copy constructor
+	constexpr BigInteger(const BigInteger<B,!is_signed,I...> & n)
+		: numbers(n.numbers)
+	{}
+
+	/// Convert signedness move constructor
+	constexpr BigInteger(BigInteger<B,!is_signed,I...> && n)
+		: numbers(std::forward<decltype(n.numbers)>(n.numbers))
 	{}
 
 	/// Assignment Operators
@@ -81,6 +100,11 @@ public:
 	{
 		return (numbers[I] || ...);
 	}
+
+//	explicit constexpr operator BigInteger<B,!is_signed,I...>() const
+//	{
+//		return numbers;
+//	}
 
 	/// Bitwise Operators
 
@@ -135,7 +159,15 @@ public:
 	friend inline constexpr std::strong_ordering operator<=>(const BigInteger & l, const BigInteger & r)
 	{
 		auto ret = std::strong_ordering::equal;
-		((ret = (std::strong_ordering::equal != l.numbers[I] <=> r.numbers[I]) ? l.numbers[I] <=> r.numbers[I] : ret), ...);
+		if constexpr(is_signed)
+		{
+			((ret = (std::strong_ordering::equal != l.numbers[I] <=> r.numbers[I]) ?
+					(I + 1 < sizeof...(I) ? l.numbers[I] <=> r.numbers[I] : std::make_signed_t<B>(l.numbers[I]) <=> std::make_signed_t<B>(r.numbers[I])) : ret), ...);
+		}
+		else
+		{
+			((ret = (std::strong_ordering::equal != l.numbers[I] <=> r.numbers[I]) ? l.numbers[I] <=> r.numbers[I] : ret), ...);
+		}
 		return ret;
 	}
 
@@ -432,9 +464,24 @@ public:
 
 	static consteval BigInteger max() noexcept
 	{
-		BigInteger n;
-		((n.numbers[I] = std::numeric_limits<B>::max()), ...);
-		return n;
+		BigInteger max({(I,std::numeric_limits<B>::max())...});
+		if constexpr(is_signed)
+		{
+			// clear msb bit
+			max.numbers[sizeof... (I) - 1] >>= 1;
+		}
+		return max;
+	}
+
+	static consteval BigInteger min() noexcept
+	{
+		BigInteger min; // default initalized to 0
+		if constexpr(is_signed)
+		{
+			// set msb bit
+			min.numbers[sizeof... (I) - 1] |= (B(1) << (sizeof (B)*8 - 1));
+		}
+		return min;
 	}
 
 	template<std::unsigned_integral T>
@@ -548,20 +595,19 @@ private:
 	std::array<B,sizeof... (I)> numbers{};
 };
 
-
-namespace uint128_ct {
-typedef BigInteger<uint64_t,0,1> uint128_ct;
+namespace uint128 {
+typedef BigInteger<uint64_t,false,0,1> uint128_t;
 
 /// literal operator
 template<char ...digits>
-consteval uint128_ct operator "" _num() noexcept
+consteval uint128_t operator "" _num() noexcept
 {
-	return uint128_ct::to_number<digits...>();
+	return uint128_t::to_number<digits...>();
 }
 }
 
-namespace uint256_t {
-typedef BigInteger<uint128_t,0,1> uint256_t;
+namespace uint256 {
+typedef BigInteger<__uint128_t,false,0,1> uint256_t;
 
 /// literal operator
 template<char ...digits>
@@ -571,8 +617,8 @@ consteval uint256_t operator "" _num() noexcept
 }
 }
 
-namespace uint512_t {
-typedef BigInteger<uint128_t,0,1,2,3> uint512_t;
+namespace uint512 {
+typedef BigInteger<__uint128_t,false,0,1,2,3> uint512_t;
 
 /// literal operator
 template<char ...digits>
@@ -582,8 +628,20 @@ consteval uint512_t operator "" _num() noexcept
 }
 }
 
-namespace uint1024_t {
-typedef BigInteger<uint128_t,0,1,2,3,4,5,6,7> uint1024_t;
+namespace int512 {
+
+typedef BigInteger<__uint128_t,true,0,1,2,3> int512_t;
+
+template<char ...digits>
+consteval int512_t operator "" _num() noexcept
+{
+	return int512_t::to_number<digits...>();
+}
+
+}
+
+namespace uint1024 {
+typedef BigInteger<__uint128_t,false,0,1,2,3,4,5,6,7> uint1024_t;
 
 /// literal operator
 template<char ...digits>
@@ -593,6 +651,19 @@ consteval uint1024_t operator "" _num() noexcept
 }
 }
 
+using uint128_t = uint128::uint128_t;
+using uint256_t = uint256::uint256_t;
+using uint512_t = uint512::uint512_t;
+using int512_t = int512::int512_t;
+using uint1024_t = uint1024::uint1024_t;
+
+}
+
+namespace std {
+template <>
+struct is_integral<biginteger::int512_t> : std::true_type {};
+template <>
+struct is_integral<biginteger::uint512_t> : std::true_type {};
 }
 
 #endif // BIGINTEGER_H

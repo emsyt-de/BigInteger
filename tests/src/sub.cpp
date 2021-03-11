@@ -26,7 +26,7 @@ TYPED_TEST(BigIntegerTests, Subtract)
 	TypeParam  c0,c1,c2;
 	if constexpr(TypeParam::bit_size == 128)
 	{
-		using namespace uint128_ct;
+		using namespace uint128;
 		a0 = 0xf_num;
 		a1 = 0xffffffff_num;
 		a2 = 0xff45d391f11421ae1_num;
@@ -47,7 +47,7 @@ TYPED_TEST(BigIntegerTests, Subtract)
 	}
 	else if constexpr(TypeParam::bit_size == 256)
 	{
-		using namespace uint256_t;
+		using namespace uint256;
 		a0 = 0xf_num;
 		a1 = 0xffffffff_num;
 		a2 = 0xffffffffe0000000000000000000000001_num;
@@ -68,7 +68,9 @@ TYPED_TEST(BigIntegerTests, Subtract)
 	}
 	else if constexpr(TypeParam::bit_size == 512)
 	{
-		using namespace uint512_t;
+		if constexpr(std::is_unsigned_v<TypeParam>)
+		{
+		using namespace uint512;
 		a0 = 0x17fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc4_num;
 		a1 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346789abc_num;
 		a2 = 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb0_num;
@@ -87,10 +89,11 @@ TYPED_TEST(BigIntegerTests, Subtract)
 		constexpr TypeParam c3  = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffea_num;
 		static_assert (ab3 == c3, "Minus failed");
 		}
+		}
 	}
 	else if constexpr(TypeParam::bit_size == 1024)
 	{
-		using namespace uint1024_t;
+		using namespace uint1024;
 		a0 = 0xf_num;
 		a1 = 0x346789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num;
 		a2 = 0x18b035581830722386091c50d922d0779b4364b931ba579aa3cd50aadc768500498d1bc95f9ffb2d91685cdf47c1c7a705cd635cacae5ea65b7789ed126b8a8413c5d7025e4fd791011bbf02e68936c9c131c835c338b254a00dcd5a42df364a3cffba6ebfd2066d6b13e5ad895850cc41f01633dab4aa76_num;

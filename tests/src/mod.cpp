@@ -24,9 +24,9 @@ TYPED_TEST(BigIntegerTests, Modulo)
 	TypeParam  a0,a1;
 	TypeParam  b0,b1;
 	TypeParam  c1;
-	if constexpr(TypeParam::bit_size == 128)
+	if constexpr(std::is_same_v<TypeParam,uint128_t>)
 	{
-		using namespace uint128_ct;
+		using namespace uint128;
 		a0 = 0xff4b9c63cbd74d45_num;
 		a1 = 0xff4b9c63cbd74d45_num;
 		b0 = 0x0_num;
@@ -41,9 +41,9 @@ TYPED_TEST(BigIntegerTests, Modulo)
 			static_assert (ab3 == c3, "Modulo failed");
 		}
 	}
-	else if constexpr(TypeParam::bit_size == 256)
+	else if constexpr(std::is_same_v<TypeParam,uint256_t>)
 	{
-		using namespace uint256_t;
+		using namespace uint256;
 		a0 = 0x17fff_num;
 		a1 = 0x80000000000000000000000000000_num;
 		b0 = 0x0_num;
@@ -58,9 +58,9 @@ TYPED_TEST(BigIntegerTests, Modulo)
 			static_assert (ab3 == c3, "Modulo failed");
 		}
 	}
-	else if constexpr(TypeParam::bit_size == 512)
+	else if constexpr(std::is_same_v<TypeParam,uint512_t>)
 	{
-		using namespace uint512_t;
+		using namespace uint512;
 		a0 = 0xf_num;
 		a1 = 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb0_num;
 		b0 = 0x0_num;
@@ -76,9 +76,27 @@ TYPED_TEST(BigIntegerTests, Modulo)
 			static_assert (ab3 == c3, "Modulo failed");
 		}
 	}
-	else if constexpr(TypeParam::bit_size == 1024)
+	else if constexpr(std::is_same_v<TypeParam,int512_t>)
 	{
-		using namespace uint1024_t;
+		using namespace int512;
+		a0 = 0xf_num;
+		a1 = 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb0_num;
+		b0 = 0x0_num;
+		b1 = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed_num; // 2^255-19
+		c1 = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe9_num;
+
+		if constexpr(proof_const)
+		{
+			/// Test compile time computing
+			constexpr TypeParam ab3 = 0xf46789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num
+					% 0xf789abc346789ab8e0e81dbb63e5be577e2a2b1bc789ab8edeeeef289abc346789abc346789abc346789_num;
+			constexpr TypeParam c3  = 0x2ad9dd29f03a4cefa131ea7c36052af84f4f6622eb12dedbd433560237ce1670901b91f59c9970c0486a_num;
+			static_assert (ab3 == c3, "Modulo failed");
+		}
+	}
+	else if constexpr(std::is_same_v<TypeParam,uint1024_t>)
+	{
+		using namespace uint1024;
 		a0 = 0xf_num;
 		a1 = 0x18b035581830722386091c50d922d0779b4364b931ba579aa3cd50aadc768500498d1bc95f9ffb2d91685cdf47c1c7a705cd635cacae5ea65b7789ed126b8a8413c5d7025e4fd791011bbf02e68936c9c131c835c338b254a00dcd5a42df364a3cffba6ebfd2066d6b13e5ad895850cc41f01633dab4aa76_num;
 		b0 = 0x0_num;

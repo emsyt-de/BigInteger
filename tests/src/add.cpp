@@ -26,7 +26,7 @@ TYPED_TEST(BigIntegerTests, Add)
 	TypeParam  c0,c1,c2;
 	if constexpr(TypeParam::bit_size == 128)
 	{
-		using namespace uint128_ct;
+		using namespace uint128;
 		a0 = 0xf_num;
 		a1 = 0xffffffff_num;
 		a2 = 0xff45d391f11421ae_num;
@@ -46,7 +46,7 @@ TYPED_TEST(BigIntegerTests, Add)
 	}
 	else if constexpr(TypeParam::bit_size == 256)
 	{
-		using namespace uint256_t;
+		using namespace uint256;
 		a0 = 0xf_num;
 		a1 = 0xffffffff_num;
 		a2 = 0xfffffffffffffffffffffffff_num;
@@ -66,28 +66,50 @@ TYPED_TEST(BigIntegerTests, Add)
 	}
 	else if constexpr(TypeParam::bit_size == 512)
 	{
-		using namespace uint512_t;
-		a0 = 0xf_num;
-		a1 = 0xffffffff_num;
-		a2 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346789abc_num;
-		b0 = 0x0_num;
-		b1 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346789abc_num;
-		b2 = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num;
-		c1 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc446789abb_num;
-		c2 = 0x1f5deb0000db4061e1cc3ac32c4b60959d1ba397f077291268a45222ed91819ef7476a8be5b3d6df070f471b198365db0c295d74466ba848adc_num;
-
-		if constexpr(proof_const)
+		if constexpr(std::is_unsigned_v<TypeParam>)
 		{
-		/// Test compile time computing
-		constexpr TypeParam ab3 = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num
-				+ 0x893ace7477dca3262672246789abc346789abc346789abc346789abc_num;
-		constexpr TypeParam c3  = 0x34701d58aa8df664ee96ceabf23be134cf23be134cf23be134cf23be134_num;
-		static_assert (ab3 == c3, "Plus failed");
+			using namespace uint512;
+			a0 = 0xf_num;
+			a1 = 0xffffffff_num;
+			a2 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346789abc_num;
+			b0 = 0x0_num;
+			b1 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346789abc_num;
+			b2 = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num;
+			c1 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc446789abb_num;
+			c2 = 0x1f5deb0000db4061e1cc3ac32c4b60959d1ba397f077291268a45222ed91819ef7476a8be5b3d6df070f471b198365db0c295d74466ba848adc_num;
+			if constexpr(proof_const)
+			{
+				/// Test compile time computing
+				constexpr TypeParam ab3 = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num
+						+ 0x893ace7477dca3262672246789abc346789abc346789abc346789abc_num;
+				constexpr TypeParam c3  = 0x34701d58aa8df664ee96ceabf23be134cf23be134cf23be134cf23be134_num;
+				static_assert (ab3 == c3, "Plus failed");
+			}
+		}
+		else if constexpr(std::is_signed_v<TypeParam>)
+		{
+			using namespace int512;
+			a0 = 0xf_num;
+			a1 = 0xffffffff_num;
+			a2 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346789abc_num;
+			b0 = 0x0_num;
+			b1 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346789abc_num;
+			b2 = 0x1c17726544a6d8d83608f44a918f2c2e136fe05177dc6cde00e81dbb63e5be587eacae577e2a2b1bc096ac5ee51bdc2f48e2e4d98a3740bf020_num;
+			c1 = 0x346789abc346789abc346789abc346789abc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc446789abb_num;
+			c2 = 0x1f5deb0000db4061e1cc3ac32c4b60959d1ba397f077291268a45222ed91819ef7476a8be5b3d6df070f471b198365db0c295d74466ba848adc_num;
+			if constexpr(proof_const)
+			{
+				/// Test compile time computing
+				constexpr TypeParam ab3 = 0x346789abc346789abc346789abc346789abc346789abc346789abc34678_num
+						+ 0x893ace7477dca3262672246789abc346789abc346789abc346789abc_num;
+				constexpr TypeParam c3  = 0x34701d58aa8df664ee96ceabf23be134cf23be134cf23be134cf23be134_num;
+				static_assert (ab3 == c3, "Plus failed");
+			}
 		}
 	}
 	else if constexpr(TypeParam::bit_size == 1024)
 	{
-		using namespace uint1024_t;
+		using namespace uint1024;
 		a0 = 0xf_num;
 		a1 = 0x346789ab8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edef21783321ef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8edeeeeef8b9876544_num;
 		a2 = 0xad0245e02ad02428ca54832437827236dacb6433872d2802c47eee623929da0aa86254ca05174c95be9eca6ac549bf1356ed55789ab5d0245e02ad0245e02ad0245e02acf_num;

@@ -17,13 +17,13 @@
 
 #include "testbiginteger.h"
 
-static constexpr bool proof_const = true;
+static constexpr bool proof_const = false;
 
 TYPED_TEST(BigIntegerTests, CheckMSB)
 {
 	if constexpr(TypeParam::bit_size == 128)
 	{
-		using namespace uint128_ct;
+		using namespace uint128;
 
 		EXPECT_EQ(TypeParam::bits(0x746789abc34_num), 42);
 		EXPECT_EQ(TypeParam::bits(0xf789abc346789ab8e0e81dbb63e5be57_num), 127);
@@ -36,7 +36,7 @@ TYPED_TEST(BigIntegerTests, CheckMSB)
 	}
 	else if constexpr(TypeParam::bit_size == 256)
 	{
-		using namespace uint256_t;
+		using namespace uint256;
 
 		EXPECT_EQ(TypeParam::bits(0xf46789abc346789abc34678234769ab4654c34678932dabc3467_num), 207);
 		EXPECT_EQ(TypeParam::bits(0xf789abc346789ab8e0e81dbb63e5be577e2a2b1b_num), 159);
@@ -49,7 +49,9 @@ TYPED_TEST(BigIntegerTests, CheckMSB)
 	}
 	else if constexpr(TypeParam::bit_size == 512)
 	{
-		using namespace uint512_t;
+		if constexpr(std::is_unsigned_v<TypeParam>)
+		{
+		using namespace uint512;
 
 		EXPECT_EQ(TypeParam::bits(0xf46789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num), 479);
 		EXPECT_EQ(TypeParam::bits(0xf789abc346789ab8e0e81dbb63e5be577e2a2b1bc789ab8edeeeef289abc346789abc346789abc346789_num), 335);
@@ -59,10 +61,11 @@ TYPED_TEST(BigIntegerTests, CheckMSB)
 			static_assert(TypeParam::bits(0xf46789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num) == 479, "MSB function failed");
 			static_assert(TypeParam::bits(0xf789abc346789ab8e0e81dbb63e5be577e2a2b1bc789ab8edeeeef289abc346789abc346789abc346789_num) == 335, "MSB function failed");
 		}
+		}
 	}
 	else if constexpr(TypeParam::bit_size == 1024)
 	{
-		using namespace uint1024_t;
+		using namespace uint1024;
 
 		EXPECT_EQ(TypeParam::bits(0xf46789abc346789abc34678234769ab4654c34678932dabc346789abc3467bc346789abc346789abc346789abc346789abc346789abc346789abc346_num), 479);
 		EXPECT_EQ(TypeParam::bits(0xf789abc346789ab8e0e81dbb63e5be577e2a2b1bc789ab8edeeeef289abc346789abc346789abc346789_num), 335);
