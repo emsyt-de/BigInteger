@@ -8,8 +8,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(BigInteger)
 
-target_compile_options(BigInteger PUBLIC -fconstexpr-ops-limit=1243554432)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(BigInteger PUBLIC -fconstexpr-ops-limit=1243554432)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(BigInteger PUBLIC -fconstexpr-steps=1243554432)
+endif()
+
 target_compile_options(BigInteger PRIVATE -Wall -Wextra -pedantic -Werror)
+#target_compile_options(BigInteger PUBLIC -stdlib=libc++)
 
 target_sources(BigInteger PRIVATE
 	biginteger.h

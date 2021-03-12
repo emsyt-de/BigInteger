@@ -491,7 +491,7 @@ public:
 	}
 
 	template<char ...digits>
-	static consteval BigInteger to_number() noexcept
+	static constexpr BigInteger to_number() noexcept
 	{
 		constexpr std::array<char, sizeof...(digits)> digits_array{ digits... };
 		constexpr bool is_hex = sizeof... (digits) > 2 && sizeof... (digits) <= ((bit_size>>2)+2) && digits_array[0] == '0' && digits_array[1] == 'x';
@@ -600,7 +600,7 @@ typedef BigInteger<uint64_t,false,0,1> uint128_t;
 
 /// literal operator
 template<char ...digits>
-consteval uint128_t operator "" _num() noexcept
+constexpr uint128_t operator "" _num() noexcept
 {
 	return uint128_t::to_number<digits...>();
 }
@@ -611,7 +611,7 @@ typedef BigInteger<__uint128_t,false,0,1> uint256_t;
 
 /// literal operator
 template<char ...digits>
-consteval uint256_t operator "" _num() noexcept
+constexpr uint256_t operator "" _num() noexcept
 {
 	return uint256_t::to_number<digits...>();
 }
@@ -622,7 +622,7 @@ typedef BigInteger<__uint128_t,false,0,1,2,3> uint512_t;
 
 /// literal operator
 template<char ...digits>
-consteval uint512_t operator "" _num() noexcept
+constexpr uint512_t operator "" _num() noexcept
 {
 	return uint512_t::to_number<digits...>();
 }
@@ -633,7 +633,7 @@ namespace int512 {
 typedef BigInteger<__uint128_t,true,0,1,2,3> int512_t;
 
 template<char ...digits>
-consteval int512_t operator "" _num() noexcept
+constexpr int512_t operator "" _num() noexcept
 {
 	return int512_t::to_number<digits...>();
 }
@@ -645,7 +645,7 @@ typedef BigInteger<__uint128_t,false,0,1,2,3,4,5,6,7> uint1024_t;
 
 /// literal operator
 template<char ...digits>
-consteval uint1024_t operator "" _num() noexcept
+constexpr uint1024_t operator "" _num() noexcept
 {
 	return uint1024_t::to_number<digits...>();
 }
